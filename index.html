@@ -146,14 +146,12 @@
                 <h3 class="font-bold text-lg text-blue-400">Deneme Konu Analizi</h3>
                 <button onclick="closeExamAnalysisModal()" class="text-gray-400 hover:text-white w-8 h-8 rounded-lg hover:bg-gray-800 transition"><i class="fas fa-times"></i></button>
             </div>
-            <div class="text-xs text-green-400 mb-4 font-bold bg-green-500/10 p-2 rounded border border-green-500/20"><i class="fas fa-robot mr-1"></i> PDF okuyucu eksik konuları otomatik doldurur. İstersen sen de manuel ekleyebilirsin.</div>
             
             <div class="flex gap-2 mb-4">
                 <select id="ea-ders" onchange="updateEAModalSubj()" class="w-1/2 bg-gray-800 p-2 rounded-xl border border-gray-700 text-sm outline-none"><option value="">Ders Seç...</option></select>
                 <select id="ea-konu" class="w-1/2 bg-gray-800 p-2 rounded-xl border border-gray-700 text-sm outline-none"><option value="">Konu Seç...</option></select>
             </div>
             <button onclick="addExamTopic('Yanlış/Boş')" class="w-full mb-4 py-2 bg-red-600/20 text-red-500 border border-red-500/50 hover:bg-red-600 hover:text-white rounded-lg transition text-sm font-bold"><i class="fas fa-plus mr-1"></i> Manuel Eksik Ekle</button>
-            
             <div id="ea-list" class="flex-1 overflow-y-auto space-y-2 border-t border-gray-700 pt-3 hide-scroll min-h-[150px]"></div>
         </div>
     </div>
@@ -164,18 +162,18 @@
 
         const tytAytKonulari = {
             "TYT": {
-                "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf", "Ses Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri", "Sözcük Türleri", "Sözcükte Yapı", "Fiiller ve Fiilimsiler", "Cümlenin Ögeleri", "Cümle Türleri", "Anlatım Bozuklukları"],
-                "Matematik": ["Temel Kavramlar", "Sayı Basamakları", "Bölünebilme", "EBOB-EKOK", "Rasyonel Sayılar", "Basit Eşitsizlikler", "Mutlak Değer", "Üslü Sayılar", "Köklü Sayılar", "Çarpanlara Ayırma", "Oran-Orantı", "Denklem Çözme", "Problemler", "Kümeler", "Mantık", "Fonksiyonlar", "Permütasyon-Kombinasyon-Olasılık", "Veri-İstatistik"],
-                "Geometri": ["Doğruda ve Üçgende Açılar", "Özel Üçgenler", "Açıortay-Kenarortay", "Benzerlik", "Çokgenler ve Dörtgenler", "Çember ve Daire", "Katı Cisimler", "Analitik Geometri"],
-                "Fizik": ["Fizik Bilimine Giriş", "Madde ve Özellikleri", "Hareket ve Kuvvet", "İş, Güç, Enerji", "Isı ve Sıcaklık", "Elektrostatik", "Elektrik ve Manyetizma", "Basınç ve Kaldırma Kuvveti", "Dalgalar", "Optik"],
-                "Kimya": ["Kimya Bilimi", "Atom ve Periyodik Sistem", "Kimyasal Türler Arası Etkileşimler", "Maddenin Halleri", "Doğa ve Kimya", "Kimyanın Temel Kanunları ve Hesaplamalar", "Karışımlar", "Asitler, Bazlar ve Tuzlar", "Kimya Her Yerde"],
-                "Biyoloji": ["Canlıların Ortak Özellikleri", "İnorganik/Organik Bileşikler", "Hücre", "Canlıların Sınıflandırılması", "Hücre Bölünmeleri", "Kalıtım", "Ekosistem Ekolojisi"]
+                "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf", "Ses Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri", "İsim", "Sıfat", "Zamir", "Zarf", "Edat-Bağlaç-Ünlem", "Fiiller", "Fiilimsiler", "Cümlenin Ögeleri", "Cümle Türleri", "Anlatım Bozuklukları"],
+                "Matematik": ["Temel Kavramlar", "Sayı Basamakları", "Bölünebilme Kuralları", "EBOB-EKOK", "Rasyonel Sayılar", "Basit Eşitsizlikler", "Mutlak Değer", "Üslü Sayılar", "Köklü Sayılar", "Çarpanlara Ayırma", "Oran-Orantı", "Sayı Problemleri", "Kesir Problemleri", "Yaş Problemleri", "Yüzde-Kar-Zarar Problemleri", "Hız Problemleri", "İşçi-Havuz Problemleri", "Karışım Problemleri", "Grafik Problemleri", "Kümeler", "Mantık", "Fonksiyonlar", "Permütasyon", "Kombinasyon", "Olasılık", "İstatistik ve Veri"],
+                "Geometri": ["Doğruda Açılar", "Üçgende Açılar", "Dik Üçgen", "İkizkenar Üçgen", "Eşkenar Üçgen", "Açıortay", "Kenarortay", "Üçgende Alan", "Üçgende Benzerlik", "Çokgenler", "Dörtgenler", "Yamuk", "Paralelkenar", "Eşkenar Dörtgen", "Dikdörtgen", "Kare", "Deltoid", "Çemberde Açı", "Çemberde Uzunluk", "Dairede Alan", "Analitik Geometri", "Katı Cisimler (Prizma, Piramit, Silindir, Koni, Küre)"],
+                "Fizik": ["Fizik Bilimine Giriş", "Madde ve Özellikleri", "Hareket ve Kuvvet", "İş, Güç, Enerji", "Isı ve Sıcaklık", "Elektrostatik", "Elektrik Akımı", "Manyetizma", "Basınç", "Kaldırma Kuvveti", "Yay ve Su Dalgaları", "Ses ve Deprem Dalgaları", "Aydınlanma ve Gölge", "Yansıma ve Aynalar", "Kırılma ve Renk", "Mercekler"],
+                "Kimya": ["Kimya Bilimi", "Atom Modelleri ve Yapısı", "Periyodik Sistem", "Kimyasal Türler Arası Etkileşimler (Güçlü/Zayıf)", "Maddenin Halleri", "Doğa ve Kimya", "Kimyanın Temel Kanunları", "Kimyasal Hesaplamalar", "Karışımlar (Homojen/Heterojen)", "Karışımları Ayırma Teknikleri", "Asitler ve Bazlar", "Tuzlar", "Kimya Her Yerde"],
+                "Biyoloji": ["Canlıların Ortak Özellikleri", "İnorganik Bileşikler", "Organik Bileşikler (Karbonhidrat, Yağ, Protein, Enzim)", "Hücre Zarı ve Madde Geçişleri", "Hücre Organelleri", "Canlıların Sınıflandırılması (Bakteri, Arke, Protista, Mantar, Bitki, Hayvan)", "Hücre Bölünmeleri (Mitoz, Mayoz)", "Eşeysiz ve Eşeyli Üreme", "Kalıtım", "Kan Grupları", "Soyağaçları", "Ekosistem Ekolojisi", "Güncel Çevre Sorunları"]
             },
             "AYT": {
-                "Matematik": ["İkinci Dereceden Denklemler", "Karmaşık Sayılar", "Parabol", "Eşitsizlikler", "Polinomlar", "Logaritma", "Diziler", "Trigonometri", "Limit ve Süreklilik", "Türev", "İntegral"],
-                "Fizik": ["Vektörler ve Bağıl Hareket", "Newton'un Hareket Yasaları", "Atışlar", "İş, Güç ve Enerji", "İtme ve Momentum", "Tork ve Denge", "Elektriksel Kuvvet ve Potansiyel", "Manyetizma", "Çembersel Hareket", "Basit Harmonik Hareket", "Dalga Mekaniği", "Modern Fizik", "Radyoaktivite"],
-                "Kimya": ["Modern Atom Teorisi", "Gazlar", "Sıvı Çözeltiler", "Kimyasal Tepkimelerde Enerji", "Tepkimelerde Hız", "Kimyasal Denge", "Asit-Baz Dengesi", "Kçç", "Elektrokimya", "Karbon Kimyasına Giriş", "Organik Bileşikler"],
-                "Biyoloji": ["Sinir Sistemi", "Endokrin Sistem", "Duyu Organları", "Destek ve Hareket Sistemi", "Sindirim Sistemi", "Dolaşım ve Bağışıklık Sistemi", "Solunum Sistemi", "Boşaltım Sistemi", "Üreme Sistemi", "Popülasyon Ekolojisi", "Protein Sentezi", "Fotosentez ve Kemosentez", "Hücresel Solunum", "Bitkisel Dokular ve Organlar", "Bitkilerde Hareket ve Taşıma", "Bitkilerde Üreme"]
+                "Matematik": ["İkinci Dereceden Denklemler", "İkinci Dereceden Eşitsizlikler", "Parabol", "Karmaşık Sayılar", "Polinomlar", "Logaritma", "Aritmetik Dizi", "Geometrik Dizi", "Trigonometri (Açı, Fonksiyon, Grafikler)", "Trigonometrik Denklemler ve Yarım Açı", "Limit", "Süreklilik", "Türev Alma Kuralları", "Türevin Geometrik Yorumu", "Maksimum-Minimum Problemleri", "Belirsiz İntegral", "Belirli İntegral", "İntegralde Alan"],
+                "Fizik": ["Vektörler", "Bağıl Hareket ve Nehir Problemleri", "Newton'un Hareket Yasaları", "Bir Boyutta Sabit İvmeli Hareket", "Atışlar", "İş, Güç ve Enerji", "İtme ve Çizgisel Momentum", "Tork", "Denge ve Kesişen Kuvvetler", "Kütle ve Ağırlık Merkezi", "Basit Makineler", "Elektriksel Kuvvet ve Potansiyel", "Düzgün Elektrik Alan ve Sığa", "Manyetik Alan ve Manyetik Kuvvet", "Elektromanyetik İndüklenme", "Alternatif Akım", "Transformatörler", "Düzgün Çembersel Hareket", "Dönerek Öteleme ve Açısal Momentum", "Kütle Çekim ve Kepler Yasaları", "Basit Harmonik Hareket", "Su Dalgalarında Girişim ve Kırınım", "Işığın Çift Yarıkta Girişimi ve Tek Yarıkta Kırınımı", "Elektromanyetik Dalgalar", "Atom Modelleri", "Büyük Patlama ve Evrenin Oluşumu", "Radyoaktivite", "Özel Görelilik", "Fotoelektrik Olayı", "Compton ve De Broglie", "Modern Fiziğin Teknolojideki Uygulamaları"],
+                "Kimya": ["Kuantum Atom Modeli", "Periyodik Özellikler", "Gazların Özellikleri ve Gaz Yasaları", "İdeal Gaz Denklemi ve Kinetik Teori", "Sıvı Çözeltiler ve Derişim Birimleri", "Koligatif Özellikler", "Kimyasal Tepkimelerde Isı ve Entalpi", "Kimyasal Tepkimelerde Hız", "Kimyasal Denge (Kc, Kp)", "Le Chatelier İlkesi", "Sulu Çözelti Dengeleri (Asit-Baz)", "Çözünürlük Dengesi (Kçç)", "Redoks Tepkimeleri", "Aktiflik", "Elektrokimyasal Piller", "Elektroliz", "Karbon Kimyasına Giriş", "Hibritleşme ve Molekül Geometrisi", "Alkanlar", "Alkenler", "Alkinler", "Aromatik Bileşikler", "Alkoller", "Eterler", "Aldehitler ve Ketonlar", "Karboksilik Asitler", "Esterler", "Enerji Kaynakları ve Sürdürülebilirlik"],
+                "Biyoloji": ["Sinir Sistemi Yapısı ve İşleyişi", "Endokrin Sistem (Hormonlar)", "Duyu Organları", "Destek ve Hareket Sistemi (Kemik, Kıkırdak, Kas)", "Sindirim Sistemi", "Dolaşım Sistemi (Kalp, Damarlar, Kan)", "Lenf Sistemi ve Bağışıklık", "Solunum Sistemi", "Boşaltım Sistemi (Üriner)", "Üreme Sistemi", "Embriyonik Gelişim", "Komünite Ekolojisi", "Popülasyon Ekolojisi", "Nükleik Asitlerin Yapısı (DNA/RNA)", "DNA Replikasyonu", "Protein Sentezi (Genden Proteine)", "Genetik Mühendisliği ve Biyoteknoloji", "Fotosentez", "Kemosentez", "Hücresel Solunum (Oksijenli/Oksijensiz/Fermantasyon)", "Bitkilerin Yapısı ve Bitkisel Dokular", "Bitkilerde Büyüme ve Hareket (Tropizma/Nasti)", "Bitkilerde Hormonlar", "Bitkilerde Taşıma (Odun/Soymuk Boruları)", "Bitkilerde Beslenme", "Bitkilerde Eşeyli Üreme (Çiçek ve Tohum)"]
             }
         };
 
@@ -187,10 +185,7 @@
 
         window.onload = () => {
             const saved = localStorage.getItem('yks_analiz_data');
-            if (saved) { 
-                appData = {...appData, ...JSON.parse(saved)}; 
-                if(!appData.studyDates) appData.studyDates = {};
-            }
+            if (saved) { appData = {...appData, ...JSON.parse(saved)}; if(!appData.studyDates) appData.studyDates = {}; }
             
             let ops = '<option value="">Ders Seç...</option>';
             Object.keys(tytAytKonulari.TYT).forEach(d => ops += `<option value="TYT-${d}">TYT ${d}</option>`);
@@ -257,6 +252,7 @@
             container.appendChild(toast); setTimeout(() => toast.remove(), 4000);
         }
 
+        // --- MENÜ YÖNETİMİ ---
         const menuItems = [
             { id: 'program', label: 'Program', icon: 'fa-calendar-alt' }, { id: 'konular', label: 'Konularım', icon: 'fa-list-ul' },
             { id: 'kronometre', label: 'Sayaç', icon: 'fa-stopwatch' }, { id: 'deneme', label: 'Deneme', icon: 'fa-chart-line' },
@@ -297,7 +293,7 @@
         function uploadPhoto(e) { const r = new FileReader(); r.onload=(ev)=>{appData.user.photo=ev.target.result;save();navigate('profil');}; r.readAsDataURL(e.target.files[0]); }
 
         // ==========================================
-        // KONULARIM MODÜLÜ (Sadece Tik Listesi)
+        // KONULARIM MODÜLÜ
         // ==========================================
         function renderKonular(el) {
             let html = `<div class="space-y-4 pb-10"><div class="p-4 bg-gray-800/50 rounded-xl text-sm text-gray-400"><i class="fas fa-info-circle text-blue-500 mr-2"></i>Bu sekme sadece ilerlemenizi görsel olarak takip etmeniz içindir. Unutma eğrisi buradaki tikleri değil, <b>Programım</b> ve <b>Kronometre</b> sekmesindeki çalışmalarınızı dikkate alır.</div>`;
@@ -309,14 +305,14 @@
                             <summary class="p-4 cursor-pointer font-semibold flex justify-between items-center hover:bg-white/5 transition select-none">
                                 ${ders} <span class="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">${tytAytKonulari[exam][ders].length} Konu</span>
                             </summary>
-                            <div class="p-4 bg-black/20 grid md:grid-cols-2 gap-2 border-t border-gray-800/50">
+                            <div class="p-4 bg-black/20 grid md:grid-cols-1 lg:grid-cols-2 gap-2 border-t border-gray-800/50">
                                 ${tytAytKonulari[exam][ders].map(konu => {
                                     const key = `${exam}-${ders}-${konu}`;
                                     const checked = appData.subjects[key] ? 'checked' : '';
                                     return `
                                         <label class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-700">
-                                            <input type="checkbox" onchange="toggleSubject('${key}')" ${checked} class="w-5 h-5 accent-blue-500 rounded">
-                                            <span class="${checked ? 'line-through text-gray-500' : 'text-sm'}">${konu}</span>
+                                            <input type="checkbox" onchange="toggleSubject('${key}')" ${checked} class="w-5 h-5 accent-blue-500 rounded flex-shrink-0">
+                                            <span class="${checked ? 'line-through text-gray-500' : 'text-sm'} leading-tight">${konu}</span>
                                         </label>
                                     `;
                                 }).join('')}
@@ -329,12 +325,11 @@
         }
         function toggleSubject(key) {
             if (appData.subjects[key]) delete appData.subjects[key];
-            else appData.subjects[key] = true; // Sadece true kaydediyoruz, tarih değil.
-            save();
+            else appData.subjects[key] = true; save();
         }
 
         // ==========================================
-        // KANBAN PROGRAM MODÜLÜ (Akıllı Asistanlı)
+        // KANBAN PROGRAM MODÜLÜ
         // ==========================================
         let currentWeekOffset = 0; let currentTaskDate = ''; let currentTaskDayName = '';
         function getWeekDates(offset = 0) {
@@ -363,82 +358,53 @@
             weekDates.forEach(d => { if(document.getElementById(`count-${d.dateStr}`)) document.getElementById(`count-${d.dateStr}`).innerText = counts[d.dateStr]; });
         }
 
-        // --- AKILLI ASİSTAN (ÖNERİ MOTORU) ---
         function populateSuggestions() {
-            let suggestions = [];
-            const now = Date.now();
-            
-            // 1. Eğriden gelenler (Artık appData.studyDates üzerinden okuyor)
+            let suggestions = []; const now = Date.now();
             for(let konuAdi in appData.studyDates) {
                 const days = Math.floor((now - appData.studyDates[konuAdi])/(1000*60*60*24));
                 if(days >= 3 && days < 5) suggestions.push({ text: konuAdi, type: '3. Gün Tekrarı', color: 'yellow' });
                 else if(days >= 7 && days < 9) suggestions.push({ text: konuAdi, type: '7. Gün Tekrarı', color: 'yellow' });
                 else if(days >= 30 && days < 33) suggestions.push({ text: konuAdi, type: '30. Gün Tekrarı', color: 'yellow' });
             }
-            
-            // 2. Deneme Analizinden gelenler
             appData.exams.forEach(e => {
-                if(e.topics) {
-                    e.topics.forEach(t => {
-                        if(t.status.includes('Yanlış') || t.status.includes('Boş')) {
-                            if(!suggestions.find(s => s.text === t.name)) suggestions.push({ text: t.name, type: 'Deneme Eksiği', color: 'red' });
-                        }
-                    });
-                }
+                if(e.topics) { e.topics.forEach(t => { if(t.status.includes('Yanlış') || t.status.includes('Boş')) {
+                    if(!suggestions.find(s => s.text === t.name)) suggestions.push({ text: t.name, type: 'Deneme Eksiği', color: 'red' });
+                }});}
             });
-            
             const c = document.getElementById('smart-suggestions');
-            if(suggestions.length === 0) {
-                c.innerHTML = '<span class="text-xs text-gray-500 p-2">Harikasın! Şu an için eksik konu veya tekrar önerisi yok.</span>';
-            } else {
-                c.innerHTML = suggestions.slice(0, 7).map(s => `
-                    <button type="button" onclick="autoFillTask('${s.text.replace(/'/g,"\\'")}')" class="text-[10px] px-2 py-1.5 rounded-lg bg-${s.color}-500/20 text-${s.color}-400 border border-${s.color}-500/30 hover:bg-${s.color}-500 hover:text-white transition whitespace-nowrap">
-                        <i class="fas ${s.color === 'yellow' ? 'fa-history' : 'fa-exclamation-circle'} mr-1"></i> ${s.text}
-                    </button>
-                `).join('');
+            if(suggestions.length === 0) c.innerHTML = '<span class="text-xs text-gray-500 p-2">Eksik konu veya tekrar önerisi yok.</span>';
+            else {
+                c.innerHTML = suggestions.slice(0, 10).map(s => `<button type="button" onclick="autoFillTask('${s.text.replace(/'/g,"\\'")}')" class="text-[10px] px-2 py-1.5 rounded-lg bg-${s.color}-500/20 text-${s.color}-400 border border-${s.color}-500/30 hover:bg-${s.color}-500 hover:text-white transition whitespace-nowrap"><i class="fas ${s.color === 'yellow' ? 'fa-history' : 'fa-exclamation-circle'} mr-1"></i> ${s.text}</button>`).join('');
             }
         }
 
         function autoFillTask(konuName) {
-            let foundDers = ""; let exactKonu = "";
-            const searchName = konuName.toLowerCase();
+            let foundDers = ""; let exactKonu = ""; const searchName = konuName.toLowerCase().substring(0,15); 
             for(let ex in tytAytKonulari) {
                 for(let d in tytAytKonulari[ex]) {
                     for(let k of tytAytKonulari[ex][d]) {
-                        if(k.toLowerCase().includes(searchName) || searchName.includes(k.toLowerCase())) {
+                        if(k.toLowerCase().includes(searchName) || searchName.includes(k.toLowerCase().substring(0,10))) {
                             foundDers = `${ex}-${d}`; exactKonu = k; break;
                         }
-                    }
-                    if(foundDers) break;
-                }
-                if(foundDers) break;
+                    } if(foundDers) break;
+                } if(foundDers) break;
             }
             if(foundDers) {
-                document.getElementById('modal-ders').value = foundDers;
-                updateModalSubj();
-                document.getElementById('modal-konu').value = exactKonu;
-                showToast("Ders ve Konu otomatik seçildi!", "success");
-            } else {
-                // Eğer müfredatta tam ismini bulamazsa, manuel girilmesi için text'i yazarız.
-                // Bu durumda özel konu gibi davranması için select yapısını iptal etmiyoruz ama kullanıcıyı uyarıyoruz.
-                showToast(`Eksik konu: ${konuName}. Lütfen listeden en yakın dersi/konuyu seçin.`, "warning");
-            }
+                document.getElementById('modal-ders').value = foundDers; updateModalSubj(); document.getElementById('modal-konu').value = exactKonu; showToast("Otomatik seçildi!", "success");
+            } else { showToast(`Eksik konu: ${konuName}. Lütfen listeden en yakın dersi seçin.`, "warning"); }
         }
 
         function updateModalSubj() { const [ex, d] = document.getElementById('modal-ders').value.split('-'); document.getElementById('modal-konu').innerHTML = tytAytKonulari[ex][d].map(k=>`<option value="${k}">${k}</option>`).join(''); }
-        
         function saveTaskModal() {
             const d = document.getElementById('modal-ders').value, k = document.getElementById('modal-konu').value, q = document.getElementById('modal-q').value;
             if(!d || !k) return showToast("Ders ve konu seçmelisin!", "error");
             appData.tasks.push({ id: Date.now(), date: currentTaskDate, day: currentTaskDayName, ders: d.replace('-',' '), konu: k, q: parseInt(q)||0, status: 'pending' });
             save(); document.getElementById('task-modal').classList.add('hidden'); renderProgram(document.getElementById('view-container')); showToast("Görev Eklendi!", "success");
         }
-        
         function doneTask(id) {
             const t = appData.tasks.find(x=>x.id===id); t.status = 'done'; appData.performance.totalQuestions += t.q;
             appData.performance.history.push({ id: Date.now(), date: formatDateNumeric(new Date()), mins: 0, qs: t.q, subject: t.konu });
-            appData.studyDates[t.konu] = Date.now(); // Eğri için çalışılan tarihi kaydet
-            save(); renderProgram(document.getElementById('view-container')); showToast(`${t.q} soru eklendi!`, "success");
+            appData.studyDates[t.konu] = Date.now(); save(); renderProgram(document.getElementById('view-container')); showToast(`${t.q} soru eklendi!`, "success");
         }
 
         // ==========================================
@@ -490,14 +456,14 @@
             const lap = appData.activeLaps[idx], subj = document.getElementById(`lap-subj-${id}`).value || 'Genel', qs = parseInt(document.getElementById(`lap-q-${id}`).value) || 0;
             appData.performance.totalMinutes += lap.mins; appData.performance.totalQuestions += qs;
             appData.performance.history.push({ id: Date.now(), date: formatDateNumeric(new Date()), mins: lap.mins, qs, subject: subj });
-            if(subj !== 'Genel') appData.studyDates[subj] = Date.now(); // Eğri için çalışılan tarihi kaydet
+            if(subj !== 'Genel') appData.studyDates[subj] = Date.now(); 
             appData.activeLaps.splice(idx, 1); save(); renderLaps(); showToast("Tur kaydedildi!", "success");
         }
 
         function resetSW() { appData.stopwatch = { running: false, startTime: null, elapsed: 0, lastLapElapsed: 0 }; clearInterval(swInt); save(); updateSW(); document.getElementById('sw-start-btn').innerText = 'BAŞLAT'; document.getElementById('sw-start-btn').className = 'px-8 py-4 bg-green-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95'; }
 
         // ==========================================
-        // DENEME ANALİZİ (OTOMATİK SAYISAL/NET HESABI, İSİM, EKSİK KONU)
+        // DENEME ANALİZİ (GELİŞMİŞ TABLOLU)
         // ==========================================
         let viewMode = 'list'; 
 
@@ -505,7 +471,7 @@
             el.innerHTML = `
                 <div class="flex gap-2 mb-6 p-1 bg-gray-800 rounded-xl w-fit mx-auto md:mx-0 overflow-x-auto max-w-full">
                     <button onclick="viewMode='list'; renderDeneme(document.getElementById('view-container'));" class="px-6 py-2 rounded-lg text-sm font-bold transition shrink-0 ${viewMode==='list' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}">Sınav Yükle & Liste</button>
-                    <button onclick="viewMode='chart'; renderDeneme(document.getElementById('view-container'));" class="px-6 py-2 rounded-lg text-sm font-bold transition shrink-0 ${viewMode==='chart' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}">Grafikler & Eksik Analizi</button>
+                    <button onclick="viewMode='chart'; renderDeneme(document.getElementById('view-container'));" class="px-6 py-2 rounded-lg text-sm font-bold transition shrink-0 ${viewMode==='chart' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}">Gelişim Grafikleri</button>
                 </div>
                 ${viewMode === 'list' ? renderDenemeList() : renderDenemeCharts()}
             `;
@@ -519,13 +485,13 @@
                 <div class="glass p-6 rounded-2xl group relative overflow-hidden h-fit">
                     <div class="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition pointer-events-none"></div>
                     <h3 class="font-bold mb-2 text-blue-400 flex items-center gap-2"><i class="fas fa-robot"></i> Akıllı Sınav Okuyucu</h3>
-                    <p class="text-xs text-gray-400 mb-4">PDF yüklersen netleri ve MEB alt konularındaki eksiklerini otomatik bulur.</p>
+                    <p class="text-xs text-gray-400 mb-4">Toplu PDF atabilirsiniz. TYT'yi tam, AYT'yi Sayısal (Mat+Fen) olarak analiz eder ve eksik MEB kazanımlarını bulur.</p>
                     
                     <div class="mb-4">
-                        <label class="text-xs text-gray-400">Okunacak Alan:</label>
+                        <label class="text-xs text-gray-400">AYT Okunacak Alan:</label>
                         <select id="exam-alan" class="w-full bg-gray-800 p-2 rounded-lg border border-gray-700 text-sm mt-1 outline-none text-white font-bold">
-                            <option value="SAY">Sayısal (Mat + Fen) - Diğerlerini yoksayar</option>
-                            <option value="TUM">Tüm Dersleri Oku (TYT vb.)</option>
+                            <option value="SAY">Sayısal (Mat + Fen) - Edebiyat ve Sosyal'i yoksayar</option>
+                            <option value="TUM">Tüm Dersleri Oku</option>
                         </select>
                     </div>
 
@@ -562,7 +528,7 @@
                 } catch (err) { console.log(err); }
             }
             loadingEl.classList.add('hidden'); event.target.value = ''; 
-            if (successCount > 0) { save(); renderExams(); showToast(`${successCount} sınav ve eksik konular eklendi.`, "success"); } else { showToast("Sınav tespit edilemedi.", "error"); }
+            if (successCount > 0) { save(); renderExams(); showToast(`${successCount} sınav ve eksikler eklendi.`, "success"); } else { showToast("Sınav tespit edilemedi.", "error"); }
         }
 
         function extractDataFromText(txt, alan) {
@@ -579,7 +545,16 @@
             let nameMatch = cleanTxt.match(/([^\n]*?(?:YAYINLARI|DENEME|KURUMSAL)[^\n]*)/i);
             if(nameMatch) examName = nameMatch[1].trim().substring(0,40);
 
-            let matD=0, matY=0, fenD=0, fenY=0, sosD=0, sosY=0, turkD=0, turkY=0;
+            // Branş Bazlı Detay Objeleri
+            let b = { 
+                MAT: {d:0, y:0, t:40}, 
+                FZK: {d:0, y:0, t: type==='AYT'?14:7}, 
+                KMY: {d:0, y:0, t: type==='AYT'?13:7}, 
+                BY: {d:0, y:0, t: type==='AYT'?13:6}, 
+                TURK: {d:0, y:0, t:40}, 
+                SOS: {d:0, y:0, t:20} 
+            };
+            
             let autoTopics = [];
 
             for(let i=0; i<lines.length; i++) {
@@ -587,32 +562,46 @@
                 let match = line.match(/(?:TYT|AYT)\.(MAT|FZK|KMY|BY|TRH|CGR|FLSF|DKAB|TDE|SYLJ|PSKL|MNTK)\.[\d\.]+\s+(.*)/i);
                 
                 if(match) {
-                    let ders = match[1].toUpperCase();
+                    let rawDers = match[1].toUpperCase();
                     let konuRaw = match[2].trim().replace(/['"“”]/g, '');
 
-                    let isSAY = ['MAT','FZK','KMY','BY'].includes(ders);
-                    let isSOZ = ['TRH','CGR','FLSF','DKAB','TDE','SYLJ','PSKL','MNTK'].includes(ders);
+                    let isSAY = ['MAT','FZK','KMY','BY'].includes(rawDers);
+                    let isSOZ = ['TRH','CGR','FLSF','DKAB','TDE','SYLJ','PSKL','MNTK'].includes(rawDers);
                     
                     if (alan === 'SAY' && type === 'AYT' && !isSAY) continue;
 
+                    let dersKey = rawDers;
+                    if(isSOZ) dersKey = 'SOS';
+                    if(dersKey === 'TÜRKÇE' || dersKey === 'TÜRK') dersKey = 'TURK';
+
                     let ctx = (lines[i-1]||'') + line + (lines[i+1]||'');
                     let isCorrect = ctx.includes('+');
+                    let isWrong = ctx.includes('-') || /[a-z]/.test(line.split(/(?:AYT|TYT)/)[0]||''); // b, c gibi küçük harf yanlıştır
                     
                     if(isCorrect) {
-                        if(ders==='MAT') matD++; else if(['FZK','KMY','BY'].includes(ders)) fenD++; else if(isSOZ) sosD++; else turkD++;
-                    } else {
-                        if(ders==='MAT') matY++; else if(['FZK','KMY','BY'].includes(ders)) fenY++; else if(isSOZ) sosY++; else turkY++;
-                        
+                        if(b[dersKey] !== undefined) b[dersKey].d++;
+                    } else if(isWrong) {
+                        if(b[dersKey] !== undefined) b[dersKey].y++;
                         let konuSade = konuRaw.replace(/(açıklar|kavrar|çözer|belirler|örnekler verir|analiz eder|fark eder|irdeler|sınıflandırarak|yorumlar|ile ilgili).*?/gi, '').trim();
                         if(konuSade.endsWith(',')) konuSade = konuSade.slice(0, -1);
-                        if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Yanlış/Boş" });
+                        if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Yanlış" });
+                    } else {
+                        let konuSade = konuRaw.replace(/(açıklar|kavrar|çözer|belirler|örnekler verir|analiz eder|fark eder|irdeler|sınıflandırarak|yorumlar|ile ilgili).*?/gi, '').trim();
+                        if(konuSade.endsWith(',')) konuSade = konuSade.slice(0, -1);
+                        if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Boş" });
                     }
                 }
             }
 
-            let matN = matD - (matY * 0.25); let fenN = fenD - (fenY * 0.25); let sosN = sosD - (sosY * 0.25); let turkN = turkD - (turkY * 0.25);
-            let totalNet = 0;
+            let matN = b.MAT.d - (b.MAT.y * 0.25);
+            let fizN = b.FZK.d - (b.FZK.y * 0.25);
+            let kimN = b.KMY.d - (b.KMY.y * 0.25);
+            let biyoN = b.BY.d - (b.BY.y * 0.25);
+            let fenN = fizN + kimN + biyoN;
+            let turkN = b.TURK.d - (b.TURK.y * 0.25);
+            let sosN = b.SOS.d - (b.SOS.y * 0.25);
 
+            let totalNet = 0;
             if(alan === 'SAY' && type === 'AYT') totalNet = matN + fenN;
             else totalNet = matN + fenN + sosN + turkN;
 
@@ -621,20 +610,33 @@
                 if(fb) totalNet = parseFloat(fb[1].replace(',','.'));
             }
 
-            let details = [];
-            if(matD>0||matY>0) details.push(`Mat: ${matN}N (${matD}D ${matY}Y)`); 
-            if(type === 'AYT' && alan === 'SAY') {
-                if(fenD>0||fenY>0) details.push(`Fen: ${fenN}N (${fenD}D ${fenY}Y)`);
-            } else {
-                if(fenD>0||fenY>0) details.push(`Fen: ${fenN}N`);
-                if(turkD>0||turkY>0) details.push(`Tür: ${turkN}N`);
-                if(sosD>0||sosY>0) details.push(`Sos: ${sosN}N`);
+            // Gelişmiş Tablo Html Oluşturma
+            let detailHtml = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center text-[11px] bg-black/40 p-3 rounded-lg mt-2 font-mono">`;
+            if(b.MAT.d>0 || b.MAT.y>0) {
+                let empty = b.MAT.t - (b.MAT.d + b.MAT.y);
+                detailHtml += `<div><b class="text-blue-400 block mb-1">MATEMATİK</b><span class="text-green-400">${b.MAT.d} D</span> | <span class="text-red-400">${b.MAT.y} Y</span> | <span class="text-gray-400">${empty>0?empty:0} B</span><br><b class="text-white">${matN} N</b></div>`;
             }
+            if(type === 'AYT' && alan === 'SAY') {
+                if(b.FZK.d>0||b.FZK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FİZİK</b><span class="text-green-400">${b.FZK.d} D</span> | <span class="text-red-400">${b.FZK.y} Y</span> | <span class="text-gray-400">${b.FZK.t-(b.FZK.d+b.FZK.y)>0?b.FZK.t-(b.FZK.d+b.FZK.y):0} B</span><br><b class="text-white">${fizN} N</b></div>`;
+                if(b.KMY.d>0||b.KMY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">KİMYA</b><span class="text-green-400">${b.KMY.d} D</span> | <span class="text-red-400">${b.KMY.y} Y</span> | <span class="text-gray-400">${b.KMY.t-(b.KMY.d+b.KMY.y)>0?b.KMY.t-(b.KMY.d+b.KMY.y):0} B</span><br><b class="text-white">${kimN} N</b></div>`;
+                if(b.BY.d>0||b.BY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">BİYOLOJİ</b><span class="text-green-400">${b.BY.d} D</span> | <span class="text-red-400">${b.BY.y} Y</span> | <span class="text-gray-400">${b.BY.t-(b.BY.d+b.BY.y)>0?b.BY.t-(b.BY.d+b.BY.y):0} B</span><br><b class="text-white">${biyoN} N</b></div>`;
+            } else {
+                let fD = b.FZK.d+b.KMY.d+b.BY.d; let fY = b.FZK.y+b.KMY.y+b.BY.y; let fT = b.FZK.t+b.KMY.t+b.BY.t;
+                if(fD>0||fY>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FEN BİL.</b><span class="text-green-400">${fD} D</span> | <span class="text-red-400">${fY} Y</span> | <span class="text-gray-400">${fT-(fD+fY)>0?fT-(fD+fY):0} B</span><br><b class="text-white">${fenN} N</b></div>`;
+                if(b.TURK.d>0||b.TURK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">TÜRKÇE</b><span class="text-green-400">${b.TURK.d} D</span> | <span class="text-red-400">${b.TURK.y} Y</span> | <span class="text-gray-400">${b.TURK.t-(b.TURK.d+b.TURK.y)>0?b.TURK.t-(b.TURK.d+b.TURK.y):0} B</span><br><b class="text-white">${turkN} N</b></div>`;
+                if(b.SOS.d>0||b.SOS.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">SOSYAL</b><span class="text-green-400">${b.SOS.d} D</span> | <span class="text-red-400">${b.SOS.y} Y</span> | <span class="text-gray-400">${b.SOS.t-(b.SOS.d+b.SOS.y)>0?b.SOS.t-(b.SOS.d+b.SOS.y):0} B</span><br><b class="text-white">${sosN} N</b></div>`;
+            }
+            detailHtml += `</div>`;
 
             let uniqueTopics = []; autoTopics.forEach(t => { if(!uniqueTopics.find(x => x.name === t.name)) uniqueTopics.push(t); });
 
             if(totalNet <= 0) return null;
-            return { id: Date.now() + Math.floor(Math.random()*1000), name: examName, date: formatDateNumeric(new Date()), type: type, net: totalNet, details: details.join(' | ') || "Net Hesaplandı", topics: uniqueTopics };
+            return { 
+                id: Date.now() + Math.floor(Math.random()*1000), 
+                name: examName, date: formatDateNumeric(new Date()), type: type, net: totalNet, 
+                detailsHtml: detailHtml, topics: uniqueTopics, 
+                branches: { mat: matN, fen: fenN, turk: turkN, sos: sosN } 
+            };
         }
 
         function renderExams() {
@@ -642,64 +644,96 @@
             if(appData.exams.length === 0) { c.innerHTML = '<div class="text-center p-5 text-gray-500 text-sm">Deneme kaydı yok.</div>'; return; }
             c.innerHTML = appData.exams.map(e => `
                 <div class="p-4 bg-gray-800/60 border border-gray-700/50 rounded-xl hover:bg-gray-800 transition">
-                    <div class="flex justify-between items-center mb-3">
+                    <div class="flex justify-between items-center mb-1">
                         <div class="flex flex-col">
-                            <span class="font-bold text-blue-400 text-lg">${e.name}</span>
+                            <span class="font-bold text-blue-400 text-md">${e.name}</span>
                             <span class="text-xs text-gray-500"><span class="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded uppercase mr-1">${e.type}</span> ${e.date}</span>
                         </div>
-                        <div class="text-green-400 font-bold text-xl bg-green-900/20 px-3 py-1 rounded-lg">${e.net} Net</div>
+                        <div class="text-green-400 font-bold text-2xl bg-green-900/20 px-4 py-1 rounded-lg">${e.net} <span class="text-sm font-normal">Net</span></div>
                     </div>
-                    <div class="text-xs text-gray-400 bg-black/20 px-2 py-1 rounded mb-3">${e.details}</div>
-                    <div class="flex justify-between items-center border-t border-gray-700/50 pt-2">
-                        <button onclick="openExamAnalysisModal(${e.id})" class="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"><i class="fas fa-microscope"></i> Eksikler (${e.topics.length})</button>
-                        <button onclick="deleteExam(${e.id})" class="w-8 h-8 rounded bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition"><i class="fas fa-trash text-sm"></i></button>
+                    ${e.detailsHtml || ''}
+                    <div class="flex justify-between items-center border-t border-gray-700/50 pt-3 mt-3">
+                        <button onclick="openExamAnalysisModal(${e.id})" class="text-xs text-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-white transition font-bold flex items-center gap-1"><i class="fas fa-microscope"></i> Eksikler (${e.topics.length})</button>
+                        <button onclick="deleteExam(${e.id})" class="w-8 h-8 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition"><i class="fas fa-trash text-sm"></i></button>
                     </div>
                 </div>
             `).join('');
         }
         function deleteExam(id) { appData.exams = appData.exams.filter(e => e.id !== id); save(); renderExams(); showToast("Deneme silindi.", "success"); }
 
-        // --- GRAFİKLER ---
+        // --- TAM GENİŞLİKTE AYRI GRAFİKLER ---
         function renderDenemeCharts() {
             let topicCounts = {};
             appData.exams.forEach(e => { if(e.topics) e.topics.forEach(t => { topicCounts[t.name] = (topicCounts[t.name] || 0) + 1; }); });
             let sortedTopics = Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0, 10);
 
             return `
-            <div class="grid lg:grid-cols-2 gap-6 pb-10">
-                <div class="space-y-6">
-                    <div class="glass p-4 rounded-2xl h-[400px] flex flex-col">
-                        <h3 class="font-bold text-blue-400 mb-2 text-center">Tüm Net Gelişimi (TYT/AYT)</h3>
-                        <div class="flex-1 relative w-full"><canvas id="examChart"></canvas></div>
-                    </div>
+            <div class="space-y-6 pb-10">
+                <div class="glass p-6 rounded-2xl h-[350px] flex flex-col">
+                    <h3 class="font-bold text-orange-400 mb-2 text-center text-lg">AYT Sayısal Net Gelişimi</h3>
+                    <div class="flex-1 relative w-full"><canvas id="aytChart"></canvas></div>
                 </div>
+                
+                <div class="glass p-6 rounded-2xl h-[350px] flex flex-col">
+                    <h3 class="font-bold text-blue-400 mb-2 text-center text-lg">TYT Net Gelişimi</h3>
+                    <div class="flex-1 relative w-full"><canvas id="tytChart"></canvas></div>
+                </div>
+
                 <div class="glass p-6 rounded-2xl h-fit">
-                    <h3 class="font-bold text-red-400 mb-4 border-b border-gray-700 pb-2"><i class="fas fa-exclamation-circle mr-2"></i>Sık Hata Yapılan (PDF Tespitli)</h3>
-                    <div class="space-y-3">
-                        ${sortedTopics.length === 0 ? '<p class="text-gray-500 text-sm text-center">Henüz eksik konu analizi girmediniz.</p>' : 
-                          sortedTopics.map(t => `<div class="flex justify-between bg-black/20 p-3 rounded-lg border border-gray-700/50"><span class="text-sm font-medium pr-2">${t[0]}</span><span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded whitespace-nowrap">${t[1]} Hata</span></div>`).join('')}
+                    <h3 class="font-bold text-red-400 mb-4 border-b border-gray-700 pb-2 text-lg"><i class="fas fa-exclamation-circle mr-2"></i>Sık Hata Yapılan Konular (PDF Tespitli)</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        ${sortedTopics.length === 0 ? '<p class="text-gray-500 text-sm md:col-span-2 text-center">Henüz eksik konu analizi girmediniz.</p>' : 
+                          sortedTopics.map(t => `<div class="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-gray-700/50"><span class="text-sm font-medium pr-2">${t[0]}</span><span class="text-red-400 font-bold bg-red-500/10 px-3 py-1 rounded-lg whitespace-nowrap">${t[1]} Hata</span></div>`).join('')}
                     </div>
                 </div>
             </div>`;
         }
 
         function drawCharts() {
-            const exams = appData.exams.slice().reverse(); 
-            if(document.getElementById('examChart') && exams.length > 0) {
-                new Chart(document.getElementById('examChart'), { 
+            const tytExams = appData.exams.filter(e => e.type === 'TYT').slice().reverse();
+            const aytExams = appData.exams.filter(e => e.type === 'AYT').slice().reverse();
+
+            const chartOptions = { 
+                responsive: true, maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: true, labels: { color: '#9ca3af', boxWidth: 12 } },
+                    tooltip: { callbacks: { label: (ctx)=> ` ${ctx.dataset.label}: ${ctx.raw} Net` } } 
+                }, 
+                scales: { 
+                    x: { ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45, font: {size: 10} }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } } 
+                } 
+            };
+
+            if(document.getElementById('tytChart') && tytExams.length > 0) {
+                new Chart(document.getElementById('tytChart'), { 
                     type: 'line', 
                     data: { 
-                        labels: exams.map(e => e.name.length > 15 ? e.name.substring(0,15)+'...' : e.name), 
-                        datasets: [{ label: 'Net', data: exams.map(e=>e.net), borderColor: '#3b82f6', tension: 0.3, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', pointBackgroundColor: '#3b82f6', pointRadius: 4 }] 
+                        labels: tytExams.map(e => e.name.length > 15 ? e.name.substring(0,15)+'...' : e.name), 
+                        datasets: [
+                            { label: 'TYT Toplam', data: tytExams.map(e=>e.net), borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
+                            { label: 'Matematik', data: tytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
+                            { label: 'Türkçe', data: tytExams.map(e=>e.branches?e.branches.turk:0), borderColor: '#ef4444', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
+                            { label: 'Fen', data: tytExams.map(e=>e.branches?e.branches.fen:0), borderColor: '#22c55e', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
+                            { label: 'Sosyal', data: tytExams.map(e=>e.branches?e.branches.sos:0), borderColor: '#f59e0b', borderDash: [5,5], tension: 0.3, pointRadius: 3 }
+                        ] 
                     }, 
-                    options: { 
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: {display: false}, tooltip: {callbacks: { label: (ctx)=> ` ${ctx.raw} Net` }} }, 
-                        scales: { 
-                            x: { ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45, font: {size: 10} }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                            y: { beginAtZero: true, max: 120, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } } 
-                        } 
-                    } 
+                    options: { ...chartOptions, scales: { ...chartOptions.scales, y: { ...chartOptions.scales.y, max: 120 } } } 
+                });
+            }
+
+            if(document.getElementById('aytChart') && aytExams.length > 0) {
+                new Chart(document.getElementById('aytChart'), { 
+                    type: 'line', 
+                    data: { 
+                        labels: aytExams.map(e => e.name.length > 15 ? e.name.substring(0,15)+'...' : e.name), 
+                        datasets: [
+                            { label: 'AYT Sayısal Toplam', data: aytExams.map(e=>e.net), borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
+                            { label: 'Matematik', data: aytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
+                            { label: 'Fen Bilimleri', data: aytExams.map(e=>e.branches?e.branches.fen:0), borderColor: '#22c55e', borderDash: [5,5], tension: 0.3, pointRadius: 3 }
+                        ] 
+                    }, 
+                    options: { ...chartOptions, scales: { ...chartOptions.scales, y: { ...chartOptions.scales.y, max: 80 } } } 
                 });
             }
         }
@@ -715,9 +749,9 @@
         function renderEAList() {
             const exam = appData.exams.find(e => e.id === currentExamIdForAnalysis);
             document.getElementById('ea-list').innerHTML = exam.topics.map(t => `
-                <div class="flex justify-between items-center bg-gray-800 p-2 rounded-lg border border-gray-700">
-                    <div><span class="text-xs px-2 py-0.5 rounded font-bold bg-red-500/20 text-red-500">${t.status}</span> <span class="text-sm ml-2">${t.name}</span></div>
-                    <button onclick="removeExamTopic(${t.id})" class="text-gray-500 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                <div class="flex justify-between items-center bg-gray-800 p-3 rounded-xl border border-gray-700">
+                    <div><span class="text-xs px-2 py-0.5 rounded font-bold ${t.status==='Yanlış'?'bg-red-500/20 text-red-500':(t.status==='Boş'?'bg-yellow-500/20 text-yellow-500':'bg-gray-500/20 text-gray-400')}">${t.status}</span> <span class="text-sm ml-2 font-medium">${t.name}</span></div>
+                    <button onclick="removeExamTopic(${t.id})" class="text-gray-500 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
                 </div>
             `).reverse().join('');
         }
