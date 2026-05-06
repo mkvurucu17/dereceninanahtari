@@ -491,63 +491,193 @@
             else totalNet = matN + fenN + turkN + sosN;
 
             if(totalNet <= 0) {
-                let fb = txt.match(/(?:120|160|166|80)\s+\d{1,3}\s+\d{1,3}\s+\d{1,3}\s+(\d{1,3}(?:,\d{1,2})?)/);
-                if(fb) totalNet = parseFloat(fb[1].replace(',','.'));
+function extractDataFromText(txt, alan) {
+    if (!txt) return null;
+
+    // Gereksiz karakterleri temizle
+    let cleanTxt = txt.replace(/\r/g, '');
+    // Yunan harfleri ve bozuk encoding düzeltmeleri
+    cleanTxt = cleanTxt.replace(/Α/g, 'A').replace(/Υ/g, 'Y').replace(/Τ/g, 'T')
+                       .replace(/Μ/g, 'M').replace(/Κ/g, 'K').replace(/Β/g, 'B');
+
+    // --- DENEME ADI YAKALAMA ---
+    let examName = '';
+    // "ÖĞRENCİ SINAV SONUÇ BELGESİ" ile başlayan satırları tara
+    let nameMatch = cleanTxt.match(/ÖĞRENCİ\s+SINAV\s+SONUÇ\s+BELGESİ\s+([\d\-]+\s+)?([^\n]+)/i);
+    if (nameMatch) {
+        examName = nameMatch[2].trim();
+    } else {
+        // Yedek: YAYINLARI/DENEME/KURUMSAL içeren büyük harfli satırlar
+        let lines = cleanTxt.split('\n');
+        for (let line of lines) {
+            let m = line.match(/([A-Z0-9ĞÜŞİÖÇ][A-Z0-9ĞÜŞİÖÇ\s\-.,!]+(?:YAYINLARI|YAYINCILIK|DENEME|KURUMSAL|TÜRKİYE GENELİ)[^\n]*)/);
+            if (m) {
+                examName = m[1].trim().substring(0, 60);
+                break;
             }
-
-            let detailHtml = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center text-[11px] bg-black/40 p-3 rounded-lg mt-2 font-mono">`;
-            if(b.MAT.d>0 || b.MAT.y>0) detailHtml += `<div><b class="text-blue-400">MAT</b> ${matN.toFixed(2)} N</div>`;
-            if(type === 'AYT' && alan === 'SAY') {
-                if(b.FZK.d>0||b.FZK.y>0) detailHtml += `<div><b class="text-blue-400">FZK</b> ${fizN.toFixed(2)} N</div>`;
-                if(b.KMY.d>0||b.KMY.y>0) detailHtml += `<div><b class="text-blue-400">KMY</b> ${kimN.toFixed(2)} N</div>`;
-                if(b.BY.d>0||b.BY.y>0) detailHtml += `<div><b class="text-blue-400">BY</b> ${biyoN.toFixed(2)} N</div>`;
-            } else {
-                if(fenN!==0) detailHtml += `<div><b class="text-blue-400">FEN</b> ${fenN.toFixed(2)} N</div>`;
-                if(turkN!==0) detailHtml += `<div><b class="text-blue-400">TR</b> ${turkN.toFixed(2)} N</div>`;
-                if(sosN!==0) detailHtml += `<div><b class="text-blue-400">SOS</b> ${sosN.toFixed(2)} N</div>`;
-            }
-            detailHtml += `</div>`;
-
-            // Eksik konuları derslere göre grupla
-            let topicsByDers = {};
-            autoTopics.forEach(t => {
-                // konuyu müfredatla eşleştirip ders adını bul
-                let dersAdi = "Genel";
-                for(let ex in tytAytKonulari) {
-                    for(let d in tytAytKonulari[ex]) {
-                        if(tytAytKonulari[ex][d].some(k => k.toLowerCase().includes(t.name.toLowerCase().substring(0,10)))) {
-                            dersAdi = d; break;
-                        }
-                    }
-                    if(dersAdi !== "Genel") break;
-                }
-                if(!topicsByDers[dersAdi]) topicsByDers[dersAdi] = [];
-                topicsByDers[dersAdi].push(t);
-            });
-
-            let formattedTopics = [];
-            for(let ders in topicsByDers) {
-                let konular = topicsByDers[ders];
-                formattedTopics.push({ ders: ders, konular: konular });
-            }
-
-            return { 
-                id: Date.now() + Math.floor(Math.random()*1000), 
-                name: examName || (type + " Denemesi"), date: formatDateNumeric(new Date()), type: type, net: totalNet, 
-                detailsHtml: detailHtml, topics: formattedTopics,
-                branches: { mat: matN, fen: fenN, turk: turkN, sos: sosN } 
-            };
         }
+    }
 
+    // --- TÜR TESPİTİ (TYT / AYT) ---
+    let type = 'TYT'; // varsayılan TYT
+    if (cleanTxt.match(/AYT|Alan Yeterlilik/i)) type = 'AYT';
+    // TYT göstergeleri: "Temel Yeterlilik", "TYT", "TÜRKÇE"nin bol olması vs.
+    if (cleanTxt.match(/TYT|Temel Yeterlilik/i)) type = 'TYT';
+    
+    // --- DERS NETLERİNİ YAKALAMA (TABLO FORMATI) ---
+    // MATEMATİK / TÜRKÇE / FİZİK / KİMYA / BİYOLOJİ / TARİH / COĞRAFYA / FELSEFE / DİN / EDEBİYAT
+    const dersPatterns = {
+        'MAT': /(?:MATEMATİK|MATEMATİK)\s*(?:TESTİ)?[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i,
+        'TURK': /TÜRKÇE[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i,
+        'FZK': /FİZİK[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i,
+        'KMY': /KİMYA[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i,
+        'BY': /BİYOLOJİ[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i,
+        'TARIH': /TARİH-?\d?[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/gi,
+        'COGR': /COĞRAFYA-?\d?[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/gi,
+        'FELSEFE': /FELSEFE-?\d?[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/gi,
+        'DIN': /DİN\s*KÜLTÜRÜ[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i,
+        'EDB': /EDEBİYAT[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i
+    };
+
+    let bransNetler = {
+        MAT: 0, TURK: 0, FZK: 0, KMY: 0, BY: 0,
+        sosyalToplam: 0, fenToplam: 0
+    };
+
+    for (let [key, pattern] of Object.entries(dersPatterns)) {
+        let match = cleanTxt.match(pattern);
+        if (match) {
+            let net = parseFloat(match[5].replace(',', '.'));
+            if (key === 'MAT') bransNetler.MAT = net;
+            else if (key === 'TURK') bransNetler.TURK = net;
+            else if (key === 'FZK') { bransNetler.FZK = net; bransNetler.fenToplam += net; }
+            else if (key === 'KMY') { bransNetler.KMY = net; bransNetler.fenToplam += net; }
+            else if (key === 'BY') { bransNetler.BY = net; bransNetler.fenToplam += net; }
+            else if (['TARIH','COGR','FELSEFE','DIN','EDB'].includes(key)) {
+                bransNetler.sosyalToplam += net;
+            }
+        }
+    }
+
+    // Fen net'i hesaplanmamışsa (tek tek yoksa) doğrudan yakalamaya çalış
+    if (bransNetler.fenToplam === 0) {
+        let fenMatch = cleanTxt.match(/FEN\s*BİLİMLERİ[\s\S]*?Soru Sayısı\s*(\d+)[\s\S]*?Doğru\s*(\d+)[\s\S]*?Yanlış\s*(\d+)[\s\S]*?Boş\s*(\d+)[\s\S]*?Net\s*(\d+[,\.]\d+)/i);
+        if (fenMatch) bransNetler.fenToplam = parseFloat(fenMatch[5].replace(',', '.'));
+    }
+
+    // Toplam neti belirle
+    let totalNet = 0;
+    if (type === 'AYT' && alan === 'SAY') {
+        totalNet = bransNetler.MAT + bransNetler.fenToplam;
+    } else if (type === 'TYT') {
+        totalNet = bransNetler.TURK + bransNetler.MAT + bransNetler.fenToplam + bransNetler.sosyalToplam;
+    } else { // AYT Tüm
+        totalNet = bransNetler.MAT + bransNetler.fenToplam + bransNetler.sosyalToplam;
+    }
+
+    // Eğer net hâlâ 0 ise sayfanın başındaki tablodan genel neti almaya çalış
+    if (totalNet === 0) {
+        let genelNetMatch = cleanTxt.match(/Sayısal\s*:\s*\d+[\s\S]*?Net\s*(\d+[,\.]\d+)/i);
+        if (!genelNetMatch) genelNetMatch = cleanTxt.match(/Genel\s*Net\s*(\d+[,\.]\d+)/i);
+        if (genelNetMatch) totalNet = parseFloat(genelNetMatch[1].replace(',', '.'));
+        // Son çare: ilk sayfadaki büyük puntolu net
+        if (totalNet === 0) {
+            let fb = cleanTxt.match(/(?:120|160|166|80)\s+\d{1,3}\s+\d{1,3}\s+\d{1,3}\s+(\d{1,3}(?:,\d{1,2})?)/);
+            if (fb) totalNet = parseFloat(fb[1].replace(',', '.'));
+        }
+    }
+
+    // --- EKSİK KONU YAKALAMA (MEB KODLU SATIRLAR) ---
+    let autoTopics = [];
+    let lines = cleanTxt.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        let match = line.match(/(?:TYT|AYT)\.?(MAT|FZK|KMY|BY|TRH|CGR|FLSF|DKAB|TDE|SYLJ|PSKL|MNTK)\.([\d\.]+)\s+(.*)/i);
+        if (match) {
+            let rawDers = match[1].toUpperCase();
+            let konuRaw = match[3].trim();
+            let isSAY = ['MAT','FZK','KMY','BY'].includes(rawDers);
+            if (alan === 'SAY' && type === 'AYT' && !isSAY) continue;
+
+            let ctx = (lines[i-1] || '') + line + (lines[i+1] || '');
+            let hasPlus = /\+/.test(ctx);
+            if (!hasPlus) {
+                let status = (/\-/.test(ctx) || /[a-z]/.test(line.split(/(?:AYT|TYT)/)[0]||'')) ? 'Yanlış' : 'Boş';
+                let konuSade = konuRaw.replace(/(açıklar|kavrar|çözer|belirler|örnekler verir|analiz eder|fark eder|irdeler|sınıflandırarak|yorumlar).*?/gi, '').trim();
+                if (konuSade.length > 3) autoTopics.push({ name: konuSade, status: status });
+            }
+        }
+    }
+
+    // Eksikleri derslere göre grupla
+    let topicsByDers = {};
+    autoTopics.forEach(t => {
+        let dersAdi = 'Genel';
+        for (let ex in tytAytKonulari) {
+            for (let d in tytAytKonulari[ex]) {
+                if (tytAytKonulari[ex][d].some(k => k.toLowerCase().includes(t.name.toLowerCase().substring(0,10)))) {
+                    dersAdi = d; break;
+                }
+            }
+            if (dersAdi !== 'Genel') break;
+        }
+        if (!topicsByDers[dersAdi]) topicsByDers[dersAdi] = [];
+        topicsByDers[dersAdi].push(t);
+    });
+    let formattedTopics = [];
+    for (let ders in topicsByDers) {
+        formattedTopics.push({ ders: ders, konular: topicsByDers[ders] });
+    }
+
+    // Branş detayları grafikler için
+    let branches = {};
+    if (type === 'TYT') {
+        branches = {
+            mat: bransNetler.MAT,
+            turk: bransNetler.TURK,
+            fen: bransNetler.fenToplam,
+            sos: bransNetler.sosyalToplam
+        };
+    } else {
+        branches = {
+            mat: bransNetler.MAT,
+            fen: bransNetler.fenToplam
+        };
+    }
+
+    // Minimum eşik: net 0 bile olsa ad yakalandıysa geçerli say
+    if (!examName && totalNet === 0 && formattedTopics.length === 0) return null;
+
+    // Basit bir HTML tablosu oluştur
+    let detailHtml = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center text-[11px] bg-black/40 p-3 rounded-lg mt-2 font-mono">`;
+    if (type === 'TYT') {
+        detailHtml += `<div><b class="text-blue-400">TR</b> ${branches.turk.toFixed(2)} N</div>`;
+        detailHtml += `<div><b class="text-blue-400">MAT</b> ${branches.mat.toFixed(2)} N</div>`;
+        detailHtml += `<div><b class="text-blue-400">FEN</b> ${branches.fen.toFixed(2)} N</div>`;
+        detailHtml += `<div><b class="text-blue-400">SOS</b> ${branches.sos.toFixed(2)} N</div>`;
+    } else {
+        detailHtml += `<div><b class="text-blue-400">MAT</b> ${branches.mat.toFixed(2)} N</div>`;
+        detailHtml += `<div><b class="text-blue-400">FEN</b> ${branches.fen.toFixed(2)} N</div>`;
+    }
+    detailHtml += `</div>`;
+
+    return {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        name: examName || (type + " Denemesi"),
+        date: formatDateNumeric(new Date()),
+        type: type,
+        net: totalNet,
+        detailsHtml: detailHtml,
+        topics: formattedTopics,
+        branches: branches
+    };
+}
         function renderExams() {
             const c = document.getElementById('exam-list'); if(!c) return;
             if(appData.exams.length === 0) { c.innerHTML = '<div class="text-center p-5 text-gray-500 text-sm">Deneme kaydı yok.</div>'; return; }
             c.innerHTML = appData.exams.map(e => `
                 <div class="p-4 bg-gray-800/60 border border-gray-700/50 rounded-xl hover:bg-gray-800 transition">
-                    <div class="flex justify-between items-center mb-1"><div class="flex flex-col"><span class="font-bold text-blue-400 text-md">${e.name}</span><span class="text-xs text-gray-500">${e.type} | ${e.date}</span></div><div class="text-green-400 font-bold text-2xl">${e.net.toFixed(2)} N</div></div>
-                    ${e.detailsHtml}
-                    <div class="flex justify-between items-center border-t border-gray-700/50 pt-3 mt-3">
-                        <button onclick="openExamAnalysisModal(${e.id})" class="text-xs text-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-white transition"><i class="fas fa-microscope"></i> Eksikler (${e.topics.reduce((a,b)=>a+b.konular.length,0)})</button>
+                    <div class="flex justify-between items-center mb-1"><div class="flex flex-col"><span class="font-bold text-blue-400 text-md">${e.name}</span><span class="text-xs text-grt-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-white transition"><i class="fas fa-microscope"></i> Eksikler (${e.topics.reduce((a,b)=>a+b.konular.length,0)})</button>
                         <button onclick="deleteExam(${e.id})" class="w-8 h-8 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white"><i class="fas fa-trash text-sm"></i></button>
                     </div>
                 </div>
