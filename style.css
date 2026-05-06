@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    transition: background 0.3s ease; 
+    -webkit-tap-highlight-color: transparent; 
+    overflow: hidden; 
+}
+
+/* Seçili Menü Elemanları */
+.sidebar-item.active { background-color: #2563eb; color: #ffffff; }
+.mobile-sidebar-item.active { color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+
+/* Cam Efekti */
+.glass { 
+    background: rgba(255, 255, 255, 0.05); 
+    backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+}
+.dark .glass { background: rgba(15, 23, 42, 0.8); }
+
+/* Özel Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+
+/* Profil Fotoğrafı Efekti */
+.photo-upload-wrapper input[type="file"] { display: none; }
+.photo-upload-wrapper:hover .overlay { display: flex; }
+
+/* Mobil Cihazlarda Input Zoom Engelleme */
+input, select, textarea { font-size: 16px !important; }
+
+/* Gizli Kaydırma Çubuğu (Kanban Panosu İçin) */
+.hide-scroll::-webkit-scrollbar { display: none; }
+.hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
