@@ -502,6 +502,3 @@ function renderAyarlar(el) {
 }
 function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(appData)], {type: 'application/json'})); a.download=`yks_yedek_${formatDateNumeric(new Date())}.json`; a.click(); }
 function importData(e) { const r = new FileReader(); r.onload=(ev)=>{ try { appData=JSON.parse(ev.target.result); save(); location.reload(); } catch(err) { showToast("Bozuk dosya!", "error"); } }; r.readAsText(e.target.files[0]); }
-    </script>
-</body>
-</html>
