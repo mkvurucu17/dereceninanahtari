@@ -36,7 +36,7 @@
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-brand-bg text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-50 dark:bg-brand-bg text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
 
     <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-bg px-4 hidden">
         <div class="max-w-md w-full glass p-8 rounded-2xl shadow-2xl">
@@ -91,11 +91,17 @@
         </div>
     </div>
 
-    <div id="main-app" class="hidden flex h-screen overflow-hidden">
+    <div id="main-app" class="hidden flex flex-1 h-screen overflow-hidden">
         <aside class="w-64 glass border-r border-gray-800 flex flex-col shrink-0 hidden md:flex">
-            <div class="p-6 border-b border-gray-800 flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl text-white">Y</div>
-                <span class="font-bold text-sm tracking-widest uppercase">Analiz Merkezi</span>
+            <!-- YENİ LOGO ALANI -->
+            <div class="p-5 border-b border-gray-800 flex items-center gap-3">
+                <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/20">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-bold text-sm tracking-wide leading-tight">YKS Analiz</span>
+                    <span class="text-[10px] text-blue-400 font-medium tracking-widest uppercase">Merkezi</span>
+                </div>
             </div>
             <nav class="flex-1 overflow-y-auto p-4 space-y-2" id="sidebar-nav"></nav>
             <div class="p-4 border-t border-gray-800">
@@ -109,12 +115,18 @@
 
         <div class="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-gray-800 grid grid-cols-5 p-1 z-40 bg-brand-bg/95 gap-1" id="mobile-nav"></div>
 
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 relative pb-24 md:pb-8">
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 relative pb-24 md:pb-8 flex flex-col">
             <header class="mb-6 flex justify-between items-center">
                 <h2 id="view-title" class="text-2xl md:text-3xl font-bold">Hoş Geldin, <span id="user-display-name">...</span></h2>
                 <div id="timer-badge" class="hidden px-4 py-2 bg-red-600/20 text-red-500 rounded-full border border-red-500 animate-pulse font-mono font-bold">00:00:00</div>
             </header>
-            <div id="view-container" class="animate-in slide-in-from-bottom-4 duration-500 h-[calc(100%-80px)]"></div>
+            <div id="view-container" class="animate-in slide-in-from-bottom-4 duration-500 flex-1"></div>
+            
+            <!-- FOOTER -->
+            <footer class="text-center text-xs text-gray-500 mt-8 py-4 border-t border-gray-800/50 w-full">
+                © 2025 Mehmet Kerim Vurucu
+            </footer>
+            
             <div id="toast-container" class="fixed top-4 right-4 z-[9999] space-y-2"></div>
         </main>
     </div>
@@ -160,20 +172,90 @@
         // --- YARDIMCI FONKSİYONLAR ---
         function formatDateNumeric(d) { return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); }
 
+        // GÜNCELLENMİŞ MÜFREDAT (MEB SIRALI + DETAYLI ALT KONULAR)
         const tytAytKonulari = {
             "TYT": {
-                "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf", "Ses Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri", "İsim", "Sıfat", "Zamir", "Zarf", "Edat-Bağlaç-Ünlem", "Fiiller", "Fiilimsiler", "Cümlenin Ögeleri", "Cümle Türleri", "Anlatım Bozuklukları"],
-                "Matematik": ["Temel Kavramlar", "Sayı Basamakları", "Bölünebilme Kuralları", "EBOB-EKOK", "Rasyonel Sayılar", "Basit Eşitsizlikler", "Mutlak Değer", "Üslü Sayılar", "Köklü Sayılar", "Çarpanlara Ayırma", "Oran-Orantı", "Sayı Problemleri", "Kesir Problemleri", "Yaş Problemleri", "Yüzde-Kar-Zarar Problemleri", "Hız Problemleri", "İşçi-Havuz Problemleri", "Karışım Problemleri", "Grafik Problemleri", "Kümeler", "Mantık", "Fonksiyonlar", "Permütasyon", "Kombinasyon", "Olasılık", "İstatistik ve Veri"],
-                "Geometri": ["Doğruda Açılar", "Üçgende Açılar", "Dik Üçgen", "İkizkenar Üçgen", "Eşkenar Üçgen", "Açıortay", "Kenarortay", "Üçgende Alan", "Üçgende Benzerlik", "Çokgenler", "Dörtgenler", "Yamuk", "Paralelkenar", "Eşkenar Dörtgen", "Dikdörtgen", "Kare", "Deltoid", "Çemberde Açı", "Çemberde Uzunluk", "Dairede Alan", "Analitik Geometri", "Katı Cisimler (Prizma, Piramit, Silindir, Koni, Küre)"],
-                "Fizik": ["Fizik Bilimine Giriş", "Madde ve Özellikleri", "Hareket ve Kuvvet", "İş, Güç, Enerji", "Isı ve Sıcaklık", "Elektrostatik", "Elektrik Akımı", "Manyetizma", "Basınç", "Kaldırma Kuvveti", "Yay ve Su Dalgaları", "Ses ve Deprem Dalgaları", "Aydınlanma ve Gölge", "Yansıma ve Aynalar", "Kırılma ve Renk", "Mercekler"],
-                "Kimya": ["Kimya Bilimi", "Atom Modelleri ve Yapısı", "Periyodik Sistem", "Kimyasal Türler Arası Etkileşimler (Güçlü/Zayıf)", "Maddenin Halleri", "Doğa ve Kimya", "Kimyanın Temel Kanunları", "Kimyasal Hesaplamalar", "Karışımlar (Homojen/Heterojen)", "Karışımları Ayırma Teknikleri", "Asitler ve Bazlar", "Tuzlar", "Kimya Her Yerde"],
-                "Biyoloji": ["Canlıların Ortak Özellikleri", "İnorganik Bileşikler", "Organik Bileşikler (Karbonhidrat, Yağ, Protein, Enzim)", "Hücre Zarı ve Madde Geçişleri", "Hücre Organelleri", "Canlıların Sınıflandırılması (Bakteri, Arke, Protista, Mantar, Bitki, Hayvan)", "Hücre Bölünmeleri (Mitoz, Mayoz)", "Eşeysiz ve Eşeyli Üreme", "Kalıtım", "Kan Grupları", "Soyağaçları", "Ekosistem Ekolojisi", "Güncel Çevre Sorunları"]
+                "Türkçe": [
+                    "Sözcükte Anlam", "Cümlede Anlam", "Paragrafta Anlam", "Ses Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri",
+                    "İsimler", "Sıfatlar", "Zamirler", "Zarflar", "Edat - Bağlaç - Ünlem", "Fiiller", "Fiilimsiler",
+                    "Cümlenin Ögeleri", "Cümle Türleri", "Anlatım Bozuklukları"
+                ],
+                "Matematik": [
+                    "Temel Kavramlar", "Sayı Basamakları", "Bölme - Bölünebilme", "EBOB - EKOK", "Rasyonel Sayılar",
+                    "Basit Eşitsizlikler", "Mutlak Değer", "Üslü Sayılar", "Köklü Sayılar", "Çarpanlara Ayırma",
+                    "Oran - Orantı", "Denklem Çözme", "Sayı Problemleri", "Kesir Problemleri", "Yaş Problemleri",
+                    "Yüzde - Kâr - Zarar", "Karışım Problemleri", "İşçi - Havuz Problemleri", "Hareket Problemleri",
+                    "Grafik Problemleri", "Kümeler", "Mantık", "Fonksiyonlar", "Permütasyon", "Kombinasyon",
+                    "Olasılık", "İstatistik ve Veri"
+                ],
+                "Geometri": [
+                    "Doğruda Açılar", "Üçgende Açılar", "Dik Üçgen", "İkizkenar Üçgen", "Eşkenar Üçgen",
+                    "Açıortay", "Kenarortay", "Üçgende Alan", "Üçgende Benzerlik", "Çokgenler", "Dörtgenler",
+                    "Yamuk", "Paralelkenar", "Eşkenar Dörtgen", "Dikdörtgen", "Kare", "Deltoid",
+                    "Çemberde Açı", "Çemberde Uzunluk", "Dairede Alan", "Analitik Geometri",
+                    "Katı Cisimler (Prizma - Piramit - Silindir - Koni - Küre)"
+                ],
+                "Fizik": [
+                    "Fizik Bilimine Giriş", "Madde ve Özellikleri", "Hareket ve Kuvvet", "İş - Güç - Enerji",
+                    "Isı ve Sıcaklık", "Elektrostatik", "Elektrik Akımı ve Devreleri", "Manyetizma",
+                    "Basınç", "Kaldırma Kuvveti", "Yay ve Su Dalgaları", "Ses ve Deprem Dalgaları",
+                    "Aydınlanma ve Gölge", "Yansıma ve Aynalar", "Kırılma ve Renk", "Mercekler"
+                ],
+                "Kimya": [
+                    "Kimya Bilimi", "Atom Modelleri ve Yapısı", "Periyodik Sistem", "Kimyasal Türler Arası Etkileşimler",
+                    "Maddenin Halleri", "Doğa ve Kimya", "Kimyanın Temel Kanunları", "Kimyasal Hesaplamalar",
+                    "Karışımlar", "Karışımları Ayırma Teknikleri", "Asitler - Bazlar ve Tuzlar", "Kimya Her Yerde"
+                ],
+                "Biyoloji": [
+                    "Canlıların Ortak Özellikleri", "İnorganik Bileşikler", "Karbonhidratlar", "Lipitler",
+                    "Proteinler ve Enzimler", "Hücre Zarı ve Madde Geçişleri", "Hücre Organelleri",
+                    "Canlıların Sınıflandırılması", "Mitoz Bölünme", "Mayoz Bölünme", "Eşeysiz ve Eşeyli Üreme",
+                    "Kalıtım", "Kan Grupları", "Soyağaçları", "Ekosistem Ekolojisi", "Güncel Çevre Sorunları"
+                ]
             },
             "AYT": {
-                "Matematik": ["İkinci Dereceden Denklemler", "İkinci Dereceden Eşitsizlikler", "Parabol", "Karmaşık Sayılar", "Polinomlar", "Logaritma", "Aritmetik Dizi", "Geometrik Dizi", "Trigonometri (Açı, Fonksiyon, Grafikler)", "Trigonometrik Denklemler ve Yarım Açı", "Limit", "Süreklilik", "Türev Alma Kuralları", "Türevin Geometrik Yorumu", "Maksimum-Minimum Problemleri", "Belirsiz İntegral", "Belirli İntegral", "İntegralde Alan"],
-                "Fizik": ["Vektörler", "Bağıl Hareket ve Nehir Problemleri", "Newton'un Hareket Yasaları", "Bir Boyutta Sabit İvmeli Hareket", "Atışlar", "İş, Güç ve Enerji", "İtme ve Çizgisel Momentum", "Tork", "Denge ve Kesişen Kuvvetler", "Kütle ve Ağırlık Merkezi", "Basit Makineler", "Elektriksel Kuvvet ve Potansiyel", "Düzgün Elektrik Alan ve Sığa", "Manyetik Alan ve Manyetik Kuvvet", "Elektromanyetik İndüklenme", "Alternatif Akım", "Transformatörler", "Düzgün Çembersel Hareket", "Dönerek Öteleme ve Açısal Momentum", "Kütle Çekim ve Kepler Yasaları", "Basit Harmonik Hareket", "Su Dalgalarında Girişim ve Kırınım", "Işığın Çift Yarıkta Girişimi ve Tek Yarıkta Kırınımı", "Elektromanyetik Dalgalar", "Atom Modelleri", "Büyük Patlama ve Evrenin Oluşumu", "Radyoaktivite", "Özel Görelilik", "Fotoelektrik Olayı", "Compton ve De Broglie", "Modern Fiziğin Teknolojideki Uygulamaları"],
-                "Kimya": ["Kuantum Atom Modeli", "Periyodik Özellikler", "Gazların Özellikleri ve Gaz Yasaları", "İdeal Gaz Denklemi ve Kinetik Teori", "Sıvı Çözeltiler ve Derişim Birimleri", "Koligatif Özellikler", "Kimyasal Tepkimelerde Isı ve Entalpi", "Kimyasal Tepkimelerde Hız", "Kimyasal Denge (Kc, Kp)", "Le Chatelier İlkesi", "Sulu Çözelti Dengeleri (Asit-Baz)", "Çözünürlük Dengesi (Kçç)", "Redoks Tepkimeleri", "Aktiflik", "Elektrokimyasal Piller", "Elektroliz", "Karbon Kimyasına Giriş", "Hibritleşme ve Molekül Geometrisi", "Alkanlar", "Alkenler", "Alkinler", "Aromatik Bileşikler", "Alkoller", "Eterler", "Aldehitler ve Ketonlar", "Karboksilik Asitler", "Esterler", "Enerji Kaynakları ve Sürdürülebilirlik"],
-                "Biyoloji": ["Sinir Sistemi Yapısı ve İşleyişi", "Endokrin Sistem (Hormonlar)", "Duyu Organları", "Destek ve Hareket Sistemi (Kemik, Kıkırdak, Kas)", "Sindirim Sistemi", "Dolaşım Sistemi (Kalp, Damarlar, Kan)", "Lenf Sistemi ve Bağışıklık", "Solunum Sistemi", "Boşaltım Sistemi (Üriner)", "Üreme Sistemi", "Embriyonik Gelişim", "Komünite Ekolojisi", "Popülasyon Ekolojisi", "Nükleik Asitlerin Yapısı (DNA/RNA)", "DNA Replikasyonu", "Protein Sentezi (Genden Proteine)", "Genetik Mühendisliği ve Biyoteknoloji", "Fotosentez", "Kemosentez", "Hücresel Solunum (Oksijenli/Oksijensiz/Fermantasyon)", "Bitkilerin Yapısı ve Bitkisel Dokular", "Bitkilerde Büyüme ve Hareket (Tropizma/Nasti)", "Bitkilerde Hormonlar", "Bitkilerde Taşıma (Odun/Soymuk Boruları)", "Bitkilerde Beslenme", "Bitkilerde Eşeyli Üreme (Çiçek ve Tohum)"]
+                "Matematik": [
+                    "İkinci Dereceden Denklemler", "İkinci Dereceden Eşitsizlikler", "Parabol",
+                    "Karmaşık Sayılar", "Polinomlar", "Logaritma", "Aritmetik Dizi", "Geometrik Dizi",
+                    "Trigonometri (Açı - Fonksiyonlar)", "Trigonometrik Denklemler", "Limit", "Süreklilik",
+                    "Türev Alma Kuralları", "Türevin Geometrik Yorumu", "Maksimum - Minimum Problemleri",
+                    "Belirsiz İntegral", "Belirli İntegral", "İntegralde Alan"
+                ],
+                "Fizik": [
+                    "Vektörler", "Bağıl Hareket ve Nehir Problemleri", "Newton'un Hareket Yasaları",
+                    "Bir Boyutta Sabit İvmeli Hareket", "Atışlar", "İş - Güç - Enerji", "İtme ve Çizgisel Momentum",
+                    "Tork", "Denge ve Kesişen Kuvvetler", "Kütle ve Ağırlık Merkezi", "Basit Makineler",
+                    "Elektriksel Kuvvet ve Potansiyel", "Düzgün Elektrik Alan ve Sığa", "Manyetik Alan ve Manyetik Kuvvet",
+                    "Elektromanyetik İndüklenme", "Alternatif Akım", "Transformatörler",
+                    "Düzgün Çembersel Hareket", "Dönerek Öteleme ve Açısal Momentum",
+                    "Kütle Çekim ve Kepler Yasaları", "Basit Harmonik Hareket",
+                    "Su Dalgalarında Girişim ve Kırınım", "Işığın Çift Yarıkta Girişimi ve Tek Yarıkta Kırınımı",
+                    "Elektromanyetik Dalgalar", "Atom Modelleri", "Büyük Patlama ve Evrenin Oluşumu",
+                    "Radyoaktivite", "Özel Görelilik", "Fotoelektrik Olayı", "Compton ve De Broglie",
+                    "Modern Fiziğin Teknolojideki Uygulamaları"
+                ],
+                "Kimya": [
+                    "Kuantum Atom Modeli", "Periyodik Özellikler", "Gazların Özellikleri ve Gaz Yasaları",
+                    "İdeal Gaz Denklemi ve Kinetik Teori", "Sıvı Çözeltiler ve Derişim Birimleri",
+                    "Koligatif Özellikler", "Kimyasal Tepkimelerde Isı (Entalpi)", "Kimyasal Tepkimelerde Hız",
+                    "Kimyasal Denge (Kc - Kp)", "Le Chatelier İlkesi", "Sulu Çözelti Dengeleri (Asit-Baz)",
+                    "Çözünürlük Dengesi (Kçç)", "Redoks Tepkimeleri", "Aktiflik", "Elektrokimyasal Piller",
+                    "Elektroliz", "Karbon Kimyasına Giriş", "Hibritleşme ve Molekül Geometrisi",
+                    "Alkanlar", "Alkenler", "Alkinler", "Aromatik Bileşikler", "Alkoller", "Eterler",
+                    "Aldehitler ve Ketonlar", "Karboksilik Asitler", "Esterler", "Enerji Kaynakları ve Sürdürülebilirlik"
+                ],
+                "Biyoloji": [
+                    "Sinir Sistemi Yapısı ve İşleyişi", "Endokrin Sistem ve Hormonlar", "Duyu Organları",
+                    "Destek ve Hareket Sistemi (Kemik - Kıkırdak - Kas)", "Sindirim Sistemi",
+                    "Dolaşım Sistemi (Kalp - Damarlar - Kan)", "Lenf Sistemi ve Bağışıklık", "Solunum Sistemi",
+                    "Boşaltım Sistemi (Üriner)", "Üreme Sistemi", "Embriyonik Gelişim",
+                    "Komünite Ekolojisi", "Popülasyon Ekolojisi", "Nükleik Asitlerin Yapısı (DNA - RNA)",
+                    "DNA Replikasyonu", "Protein Sentezi (Genden Proteine)", "Genetik Mühendisliği ve Biyoteknoloji",
+                    "Fotosentez", "Kemosentez", "Hücresel Solunum (Oksijenli / Oksijensiz / Fermantasyon)",
+                    "Bitkilerin Yapısı ve Bitkisel Dokular", "Bitkilerde Büyüme ve Hareket (Tropizma - Nasti)",
+                    "Bitkilerde Hormonlar", "Bitkilerde Taşıma (Odun - Soymuk Boruları)",
+                    "Bitkilerde Beslenme", "Bitkilerde Eşeyli Üreme (Çiçek ve Tohum)"
+                ]
             }
         };
 
@@ -293,10 +375,10 @@
         function uploadPhoto(e) { const r = new FileReader(); r.onload=(ev)=>{appData.user.photo=ev.target.result;save();navigate('profil');}; r.readAsDataURL(e.target.files[0]); }
 
         // ==========================================
-        // KONULARIM MODÜLÜ
+        // KONULARIM MODÜLÜ (SADECE CHECKLIST)
         // ==========================================
         function renderKonular(el) {
-            let html = `<div class="space-y-4 pb-10"><div class="p-4 bg-gray-800/50 rounded-xl text-sm text-gray-400"><i class="fas fa-info-circle text-blue-500 mr-2"></i>Bu sekme sadece ilerlemenizi görsel olarak takip etmeniz içindir. Unutma eğrisi buradaki tikleri değil, <b>Programım</b> ve <b>Kronometre</b> sekmesindeki çalışmalarınızı dikkate alır.</div>`;
+            let html = `<div class="space-y-4 pb-10"><div class="p-4 bg-gray-800/50 rounded-xl text-sm text-gray-400"><i class="fas fa-info-circle text-blue-500 mr-2"></i>Bu sekme yalnızca bitirdiğin konuları işaretlemen içindir. Unutma eğrisi buradaki tikleri değil, <b>Programım</b> ve <b>Kronometre</b> sekmesindeki aktif çalışmalarını dikkate alır.</div>`;
             for (let exam in tytAytKonulari) {
                 html += `<h3 class="text-xl font-bold text-blue-500 border-b border-gray-800 pb-2">${exam} Müfredatı</h3>`;
                 for (let ders in tytAytKonulari[exam]) {
@@ -536,15 +618,19 @@
             let cleanTxt = txt.replace(/\r/g, '').replace(/Α/g, 'A').replace(/Υ/g, 'Y').replace(/Τ/g, 'T').replace(/Μ/g, 'M').replace(/Κ/g, 'K').replace(/Β/g, 'B');
             let lines = cleanTxt.split('\n');
 
-            let isAYT = cleanTxt.match(/AYT|Sayısal|Edebiyat/i) !== null;
-            let isTYT = cleanTxt.match(/TYT|Temel Matematik/i) !== null;
-            let type = (isAYT && !isTYT) ? 'AYT' : 'TYT';
-            if (cleanTxt.match(/TYT-AYT/i)) type = 'AYT';
+            // Gelişmiş isim yakalama: Büyük harfli satırlarda yayınevi/sınav adı ara
+            let examName = '';
+            for (let line of lines) {
+                let match = line.match(/([A-Z0-9ĞÜŞİÖÇ][A-Z0-9ĞÜŞİÖÇ\s\-.,!]+(?:YAYINLARI|YAYINCILIK|DENEME|KURUMSAL|TÜRKİYE GENELİ|ÖZEL|SINAVI)[^\n]*)/);
+                if (match) { examName = match[1].trim().substring(0,60); break; }
+            }
+            if (!examName) {
+                let firstLine = lines.find(l => l.trim().length > 20 && l.toUpperCase() === l);
+                if (firstLine) examName = firstLine.trim().substring(0,60);
+            }
 
-            let examName = type + " Denemesi";
-            let nameMatch = cleanTxt.match(/([^\n]*?(?:YAYINLARI|DENEME|KURUMSAL)[^\n]*)/i);
-            if(nameMatch) examName = nameMatch[1].trim().substring(0,40);
-
+            let type = cleanTxt.match(/AYT|Alan Yeterlilik/i) ? 'AYT' : 'TYT';
+            
             // Branş Bazlı Detay Objeleri
             let b = { 
                 MAT: {d:0, y:0, t:40}, 
@@ -575,17 +661,19 @@
                     if(dersKey === 'TÜRKÇE' || dersKey === 'TÜRK') dersKey = 'TURK';
 
                     let ctx = (lines[i-1]||'') + line + (lines[i+1]||'');
-                    let isCorrect = ctx.includes('+');
-                    let isWrong = ctx.includes('-') || /[a-z]/.test(line.split(/(?:AYT|TYT)/)[0]||''); // b, c gibi küçük harf yanlıştır
+                    // İyileştirme: satırın bağlamında + varsa doğru, - veya küçük harf varsa yanlış
+                    let hasPlus = ctx.includes('+');
+                    let hasMinus = ctx.includes('-') || /[a-z]/.test(line.split(/(?:AYT|TYT)/)[0]||'');
                     
-                    if(isCorrect) {
+                    if(hasPlus) {
                         if(b[dersKey] !== undefined) b[dersKey].d++;
-                    } else if(isWrong) {
+                    } else if(hasMinus) {
                         if(b[dersKey] !== undefined) b[dersKey].y++;
                         let konuSade = konuRaw.replace(/(açıklar|kavrar|çözer|belirler|örnekler verir|analiz eder|fark eder|irdeler|sınıflandırarak|yorumlar|ile ilgili).*?/gi, '').trim();
                         if(konuSade.endsWith(',')) konuSade = konuSade.slice(0, -1);
                         if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Yanlış" });
                     } else {
+                        // ne + ne - varsa Boş olarak ekle
                         let konuSade = konuRaw.replace(/(açıklar|kavrar|çözer|belirler|örnekler verir|analiz eder|fark eder|irdeler|sınıflandırarak|yorumlar|ile ilgili).*?/gi, '').trim();
                         if(konuSade.endsWith(',')) konuSade = konuSade.slice(0, -1);
                         if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Boş" });
@@ -614,26 +702,26 @@
             let detailHtml = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center text-[11px] bg-black/40 p-3 rounded-lg mt-2 font-mono">`;
             if(b.MAT.d>0 || b.MAT.y>0) {
                 let empty = b.MAT.t - (b.MAT.d + b.MAT.y);
-                detailHtml += `<div><b class="text-blue-400 block mb-1">MATEMATİK</b><span class="text-green-400">${b.MAT.d} D</span> | <span class="text-red-400">${b.MAT.y} Y</span> | <span class="text-gray-400">${empty>0?empty:0} B</span><br><b class="text-white">${matN} N</b></div>`;
+                detailHtml += `<div><b class="text-blue-400 block mb-1">MATEMATİK</b><span class="text-green-400">${b.MAT.d} D</span> | <span class="text-red-400">${b.MAT.y} Y</span> | <span class="text-gray-400">${empty>0?empty:0} B</span><br><b class="text-white">${matN.toFixed(2)} N</b></div>`;
             }
             if(type === 'AYT' && alan === 'SAY') {
-                if(b.FZK.d>0||b.FZK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FİZİK</b><span class="text-green-400">${b.FZK.d} D</span> | <span class="text-red-400">${b.FZK.y} Y</span> | <span class="text-gray-400">${b.FZK.t-(b.FZK.d+b.FZK.y)>0?b.FZK.t-(b.FZK.d+b.FZK.y):0} B</span><br><b class="text-white">${fizN} N</b></div>`;
-                if(b.KMY.d>0||b.KMY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">KİMYA</b><span class="text-green-400">${b.KMY.d} D</span> | <span class="text-red-400">${b.KMY.y} Y</span> | <span class="text-gray-400">${b.KMY.t-(b.KMY.d+b.KMY.y)>0?b.KMY.t-(b.KMY.d+b.KMY.y):0} B</span><br><b class="text-white">${kimN} N</b></div>`;
-                if(b.BY.d>0||b.BY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">BİYOLOJİ</b><span class="text-green-400">${b.BY.d} D</span> | <span class="text-red-400">${b.BY.y} Y</span> | <span class="text-gray-400">${b.BY.t-(b.BY.d+b.BY.y)>0?b.BY.t-(b.BY.d+b.BY.y):0} B</span><br><b class="text-white">${biyoN} N</b></div>`;
+                if(b.FZK.d>0||b.FZK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FİZİK</b><span class="text-green-400">${b.FZK.d} D</span> | <span class="text-red-400">${b.FZK.y} Y</span> | <span class="text-gray-400">${b.FZK.t-(b.FZK.d+b.FZK.y)>0?b.FZK.t-(b.FZK.d+b.FZK.y):0} B</span><br><b class="text-white">${fizN.toFixed(2)} N</b></div>`;
+                if(b.KMY.d>0||b.KMY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">KİMYA</b><span class="text-green-400">${b.KMY.d} D</span> | <span class="text-red-400">${b.KMY.y} Y</span> | <span class="text-gray-400">${b.KMY.t-(b.KMY.d+b.KMY.y)>0?b.KMY.t-(b.KMY.d+b.KMY.y):0} B</span><br><b class="text-white">${kimN.toFixed(2)} N</b></div>`;
+                if(b.BY.d>0||b.BY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">BİYOLOJİ</b><span class="text-green-400">${b.BY.d} D</span> | <span class="text-red-400">${b.BY.y} Y</span> | <span class="text-gray-400">${b.BY.t-(b.BY.d+b.BY.y)>0?b.BY.t-(b.BY.d+b.BY.y):0} B</span><br><b class="text-white">${biyoN.toFixed(2)} N</b></div>`;
             } else {
                 let fD = b.FZK.d+b.KMY.d+b.BY.d; let fY = b.FZK.y+b.KMY.y+b.BY.y; let fT = b.FZK.t+b.KMY.t+b.BY.t;
-                if(fD>0||fY>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FEN BİL.</b><span class="text-green-400">${fD} D</span> | <span class="text-red-400">${fY} Y</span> | <span class="text-gray-400">${fT-(fD+fY)>0?fT-(fD+fY):0} B</span><br><b class="text-white">${fenN} N</b></div>`;
-                if(b.TURK.d>0||b.TURK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">TÜRKÇE</b><span class="text-green-400">${b.TURK.d} D</span> | <span class="text-red-400">${b.TURK.y} Y</span> | <span class="text-gray-400">${b.TURK.t-(b.TURK.d+b.TURK.y)>0?b.TURK.t-(b.TURK.d+b.TURK.y):0} B</span><br><b class="text-white">${turkN} N</b></div>`;
-                if(b.SOS.d>0||b.SOS.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">SOSYAL</b><span class="text-green-400">${b.SOS.d} D</span> | <span class="text-red-400">${b.SOS.y} Y</span> | <span class="text-gray-400">${b.SOS.t-(b.SOS.d+b.SOS.y)>0?b.SOS.t-(b.SOS.d+b.SOS.y):0} B</span><br><b class="text-white">${sosN} N</b></div>`;
+                if(fD>0||fY>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FEN BİL.</b><span class="text-green-400">${fD} D</span> | <span class="text-red-400">${fY} Y</span> | <span class="text-gray-400">${fT-(fD+fY)>0?fT-(fD+fY):0} B</span><br><b class="text-white">${fenN.toFixed(2)} N</b></div>`;
+                if(b.TURK.d>0||b.TURK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">TÜRKÇE</b><span class="text-green-400">${b.TURK.d} D</span> | <span class="text-red-400">${b.TURK.y} Y</span> | <span class="text-gray-400">${b.TURK.t-(b.TURK.d+b.TURK.y)>0?b.TURK.t-(b.TURK.d+b.TURK.y):0} B</span><br><b class="text-white">${turkN.toFixed(2)} N</b></div>`;
+                if(b.SOS.d>0||b.SOS.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">SOSYAL</b><span class="text-green-400">${b.SOS.d} D</span> | <span class="text-red-400">${b.SOS.y} Y</span> | <span class="text-gray-400">${b.SOS.t-(b.SOS.d+b.SOS.y)>0?b.SOS.t-(b.SOS.d+b.SOS.y):0} B</span><br><b class="text-white">${sosN.toFixed(2)} N</b></div>`;
             }
             detailHtml += `</div>`;
 
             let uniqueTopics = []; autoTopics.forEach(t => { if(!uniqueTopics.find(x => x.name === t.name)) uniqueTopics.push(t); });
 
-            if(totalNet <= 0) return null;
+            if(totalNet <= 0 && !examName) return null;
             return { 
                 id: Date.now() + Math.floor(Math.random()*1000), 
-                name: examName, date: formatDateNumeric(new Date()), type: type, net: totalNet, 
+                name: examName || (type + " Denemesi"), date: formatDateNumeric(new Date()), type: type, net: totalNet, 
                 detailsHtml: detailHtml, topics: uniqueTopics, 
                 branches: { mat: matN, fen: fenN, turk: turkN, sos: sosN } 
             };
@@ -649,7 +737,7 @@
                             <span class="font-bold text-blue-400 text-md">${e.name}</span>
                             <span class="text-xs text-gray-500"><span class="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded uppercase mr-1">${e.type}</span> ${e.date}</span>
                         </div>
-                        <div class="text-green-400 font-bold text-2xl bg-green-900/20 px-4 py-1 rounded-lg">${e.net} <span class="text-sm font-normal">Net</span></div>
+                        <div class="text-green-400 font-bold text-2xl bg-green-900/20 px-4 py-1 rounded-lg">${e.net.toFixed(2)} <span class="text-sm font-normal">Net</span></div>
                     </div>
                     ${e.detailsHtml || ''}
                     <div class="flex justify-between items-center border-t border-gray-700/50 pt-3 mt-3">
@@ -697,7 +785,7 @@
                 responsive: true, maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: true, labels: { color: '#9ca3af', boxWidth: 12 } },
-                    tooltip: { callbacks: { label: (ctx)=> ` ${ctx.dataset.label}: ${ctx.raw} Net` } } 
+                    tooltip: { callbacks: { label: (ctx)=> ` ${ctx.dataset.label}: ${ctx.raw.toFixed(2)} Net` } } 
                 }, 
                 scales: { 
                     x: { ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45, font: {size: 10} }, grid: { color: 'rgba(255,255,255,0.05)' } },
@@ -709,7 +797,7 @@
                 new Chart(document.getElementById('tytChart'), { 
                     type: 'line', 
                     data: { 
-                        labels: tytExams.map(e => e.name.length > 15 ? e.name.substring(0,15)+'...' : e.name), 
+                        labels: tytExams.map(e => e.name.length > 20 ? e.name.substring(0,20)+'...' : e.name), 
                         datasets: [
                             { label: 'TYT Toplam', data: tytExams.map(e=>e.net), borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
                             { label: 'Matematik', data: tytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
@@ -726,14 +814,14 @@
                 new Chart(document.getElementById('aytChart'), { 
                     type: 'line', 
                     data: { 
-                        labels: aytExams.map(e => e.name.length > 15 ? e.name.substring(0,15)+'...' : e.name), 
+                        labels: aytExams.map(e => e.name.length > 20 ? e.name.substring(0,20)+'...' : e.name), 
                         datasets: [
                             { label: 'AYT Sayısal Toplam', data: aytExams.map(e=>e.net), borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
                             { label: 'Matematik', data: aytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
                             { label: 'Fen Bilimleri', data: aytExams.map(e=>e.branches?e.branches.fen:0), borderColor: '#22c55e', borderDash: [5,5], tension: 0.3, pointRadius: 3 }
                         ] 
                     }, 
-                    options: { ...chartOptions, scales: { ...chartOptions.scales, y: { ...chartOptions.scales.y, max: 80 } } } 
+                    options: { ...chartOptions, scales: { ...chartOptions.scales.y, max: 80 } } 
                 });
             }
         }
