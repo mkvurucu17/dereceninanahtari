@@ -125,6 +125,12 @@
                 <h3 class="font-bold text-lg text-blue-400" id="task-modal-title">Görev Ekle</h3>
                 <button onclick="document.getElementById('task-modal').classList.add('hidden')" class="text-gray-400 hover:text-white w-8 h-8 rounded-lg hover:bg-gray-800 transition"><i class="fas fa-times"></i></button>
             </div>
+            
+            <div class="mb-4">
+                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">Akıllı Asistan Önerileri</label>
+                <div id="smart-suggestions" class="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto hide-scroll pb-1"></div>
+            </div>
+
             <div class="space-y-3">
                 <select id="modal-ders" onchange="updateModalSubj()" class="w-full bg-gray-800 p-3 rounded-xl border border-gray-700 text-sm outline-none focus:border-blue-500 transition"><option value="">Ders Seç...</option></select>
                 <select id="modal-konu" class="w-full bg-gray-800 p-3 rounded-xl border border-gray-700 text-sm outline-none focus:border-blue-500 transition"><option value="">Önce Ders Seçin</option></select>
@@ -140,17 +146,20 @@
                 <h3 class="font-bold text-lg text-blue-400">Deneme Konu Analizi</h3>
                 <button onclick="closeExamAnalysisModal()" class="text-gray-400 hover:text-white w-8 h-8 rounded-lg hover:bg-gray-800 transition"><i class="fas fa-times"></i></button>
             </div>
+            <div class="text-xs text-green-400 mb-4 font-bold bg-green-500/10 p-2 rounded border border-green-500/20"><i class="fas fa-robot mr-1"></i> PDF okuyucu eksik konuları otomatik doldurur. İstersen sen de manuel ekleyebilirsin.</div>
+            
             <div class="flex gap-2 mb-4">
                 <select id="ea-ders" onchange="updateEAModalSubj()" class="w-1/2 bg-gray-800 p-2 rounded-xl border border-gray-700 text-sm outline-none"><option value="">Ders Seç...</option></select>
                 <select id="ea-konu" class="w-1/2 bg-gray-800 p-2 rounded-xl border border-gray-700 text-sm outline-none"><option value="">Konu Seç...</option></select>
             </div>
             <button onclick="addExamTopic('Yanlış/Boş')" class="w-full mb-4 py-2 bg-red-600/20 text-red-500 border border-red-500/50 hover:bg-red-600 hover:text-white rounded-lg transition text-sm font-bold"><i class="fas fa-plus mr-1"></i> Manuel Eksik Ekle</button>
+            
             <div id="ea-list" class="flex-1 overflow-y-auto space-y-2 border-t border-gray-700 pt-3 hide-scroll min-h-[150px]"></div>
         </div>
     </div>
 
     <script>
-        // --- YARDIMCI FONKSİYONLAR VE VERİTABANI ---
+        // --- YARDIMCI FONKSİYONLAR ---
         function formatDateNumeric(d) { return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); }
 
         const tytAytKonulari = {
@@ -172,110 +181,75 @@
 
         let appData = {
             user: { firstName: '', lastName: '', schoolName: '', schoolNo: '', grade: '', branch: '', hasCoach: false, email: '', phone: '', photo: '' },
-            tasks: [], subjects: {}, performance: { totalMinutes: 0, totalQuestions: 0, history: [] },
+            tasks: [], subjects: {}, studyDates: {}, performance: { totalMinutes: 0, totalQuestions: 0, history: [] },
             exams: [], stopwatch: { running: false, startTime: null, elapsed: 0, lastLapElapsed: 0 }, activeLaps: []
         };
 
-        // --- BAŞLANGIÇ VE OTURUM KONTROLÜ ---
         window.onload = () => {
             const saved = localStorage.getItem('yks_analiz_data');
             if (saved) { 
                 appData = {...appData, ...JSON.parse(saved)}; 
-                // Eski verilere isim alanı ekle (Geriye dönük uyumluluk)
-                appData.exams.forEach(e => { 
-                    if(!e.name) e.name = e.type + ' Denemesi'; 
-                    if(!e.topics) e.topics = []; 
-                });
+                if(!appData.studyDates) appData.studyDates = {};
             }
-
-            // Seçicileri doldur
+            
             let ops = '<option value="">Ders Seç...</option>';
             Object.keys(tytAytKonulari.TYT).forEach(d => ops += `<option value="TYT-${d}">TYT ${d}</option>`);
             Object.keys(tytAytKonulari.AYT).forEach(d => ops += `<option value="AYT-${d}">AYT ${d}</option>`);
             document.getElementById('modal-ders').innerHTML = ops; document.getElementById('ea-ders').innerHTML = ops;
 
-            // Oturum Kontrolü
             const hasSession = localStorage.getItem('yks_session') === 'true' || sessionStorage.getItem('yks_session') === 'true';
             
             if (hasSession && appData.user.schoolNo) {
                 initApp();
             } else {
                 document.getElementById('login-overlay').classList.remove('hidden');
-                if (appData.user.schoolNo && appData.user.phone) {
-                    showAuthTab('login'); // Kayıtlı biri varsa direkt Giriş Yap açılsın
-                } else {
-                    showAuthTab('register'); // İlk kez giriyorsa Kayıt Ol açılsın
-                }
+                if (appData.user.schoolNo && appData.user.phone) showAuthTab('login');
+                else showAuthTab('register');
             }
         };
 
         function showAuthTab(tab) {
             if(tab === 'login') {
-                document.getElementById('login-form').classList.remove('hidden');
-                document.getElementById('register-form').classList.add('hidden');
-                document.getElementById('tab-login').className = 'flex-1 py-2 font-bold rounded-lg bg-blue-600 text-white transition';
-                document.getElementById('tab-register').className = 'flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white transition';
+                document.getElementById('login-form').classList.remove('hidden'); document.getElementById('register-form').classList.add('hidden');
+                document.getElementById('tab-login').className = 'flex-1 py-2 font-bold rounded-lg bg-blue-600 text-white transition'; document.getElementById('tab-register').className = 'flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white transition';
             } else {
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('register-form').classList.remove('hidden');
-                document.getElementById('tab-register').className = 'flex-1 py-2 font-bold rounded-lg bg-blue-600 text-white transition';
-                document.getElementById('tab-login').className = 'flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white transition';
+                document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden');
+                document.getElementById('tab-register').className = 'flex-1 py-2 font-bold rounded-lg bg-blue-600 text-white transition'; document.getElementById('tab-login').className = 'flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white transition';
             }
         }
 
         function handleLogin(e) {
             e.preventDefault();
-            const phone = document.getElementById('login-phone').value;
-            const no = document.getElementById('login-no').value;
-            const rem = document.getElementById('remember-me').checked;
-
+            const phone = document.getElementById('login-phone').value; const no = document.getElementById('login-no').value; const rem = document.getElementById('remember-me').checked;
             if (appData.user.phone === phone && appData.user.schoolNo === no) {
-                if(rem) localStorage.setItem('yks_session', 'true');
-                else sessionStorage.setItem('yks_session', 'true');
-                initApp();
-                showToast("Hoş geldin " + appData.user.firstName + "!", "success");
-            } else {
-                showToast("Telefon veya Okul No hatalı! (Veya henüz kayıt olmadınız)", "error");
-            }
+                if(rem) localStorage.setItem('yks_session', 'true'); else sessionStorage.setItem('yks_session', 'true');
+                initApp(); showToast("Hoş geldin " + appData.user.firstName + "!", "success");
+            } else showToast("Telefon veya Okul No hatalı!", "error");
         }
 
         function handleRegister(e) {
             e.preventDefault();
             appData.user = {
                 ...appData.user,
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                schoolName: document.getElementById('schoolName').value,
-                schoolNo: document.getElementById('schoolNo').value,
-                grade: document.getElementById('grade').value,
-                branch: document.getElementById('branch').value,
-                phone: document.getElementById('reg-phone').value,
-                hasCoach: document.getElementById('hasCoach').checked
+                firstName: document.getElementById('firstName').value, lastName: document.getElementById('lastName').value,
+                schoolName: document.getElementById('schoolName').value, schoolNo: document.getElementById('schoolNo').value,
+                grade: document.getElementById('grade').value, branch: document.getElementById('branch').value,
+                phone: document.getElementById('reg-phone').value, hasCoach: document.getElementById('hasCoach').checked
             };
-            save();
-            localStorage.setItem('yks_session', 'true'); // Kayıt olunca otomatik hatırla
-            initApp();
-            showToast("Kayıt başarılı, hoş geldin!", "success");
+            save(); localStorage.setItem('yks_session', 'true'); initApp(); showToast("Kayıt başarılı!", "success");
         }
 
         function initApp() {
-            document.getElementById('login-overlay').classList.add('hidden'); 
-            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('login-overlay').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('user-display-name').innerText = appData.user.firstName;
-            renderSidebar(); navigate('deneme'); 
+            renderSidebar(); navigate('program'); 
         }
 
-        function logout() {
-            localStorage.removeItem('yks_session');
-            sessionStorage.removeItem('yks_session');
-            location.reload();
-        }
-
+        function logout() { localStorage.removeItem('yks_session'); sessionStorage.removeItem('yks_session'); location.reload(); }
         function save() { localStorage.setItem('yks_analiz_data', JSON.stringify(appData)); }
 
         function showToast(message, type = "warning") {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
+            const container = document.getElementById('toast-container'); const toast = document.createElement('div');
             const color = type === "warning" ? "bg-yellow-600" : (type === "error" ? "bg-red-600" : "bg-green-600");
             const icon = type === "success" ? "fa-check-circle" : (type === "error" ? "fa-times-circle" : "fa-exclamation-triangle");
             toast.className = `${color} text-white px-4 py-3 rounded-xl shadow-lg animate-in slide-in-from-right-8 duration-300 flex items-center gap-3`;
@@ -283,28 +257,19 @@
             container.appendChild(toast); setTimeout(() => toast.remove(), 4000);
         }
 
-        // --- MENÜ YÖNETİMİ ---
         const menuItems = [
-            { id: 'program', label: 'Program', icon: 'fa-calendar-alt' },
-            { id: 'kronometre', label: 'Sayaç', icon: 'fa-stopwatch' },
-            { id: 'deneme', label: 'Deneme', icon: 'fa-chart-line' },
-            { id: 'performans', label: 'Performans', icon: 'fa-fire' },
-            { id: 'ayarlar', label: 'Ayarlar', icon: 'fa-cog' }
+            { id: 'program', label: 'Program', icon: 'fa-calendar-alt' }, { id: 'konular', label: 'Konularım', icon: 'fa-list-ul' },
+            { id: 'kronometre', label: 'Sayaç', icon: 'fa-stopwatch' }, { id: 'deneme', label: 'Deneme', icon: 'fa-chart-line' },
+            { id: 'performans', label: 'Performans', icon: 'fa-fire' }, { id: 'ayarlar', label: 'Ayarlar', icon: 'fa-cog' }
         ];
 
         function renderSidebar() {
-            document.getElementById('sidebar-nav').innerHTML = [
-                { id: 'profil', label: 'Profil', icon: 'fa-user' }, ...menuItems, { id: 'unutma', label: 'Unutma Eğrisi', icon: 'fa-brain' }
-            ].map(item => `
-                <button onclick="navigate('${item.id}')" id="nav-${item.id}" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-gray-400 hover:bg-gray-800">
-                    <i class="fas ${item.icon}"></i><span class="font-medium">${item.label}</span>
-                </button>
+            document.getElementById('sidebar-nav').innerHTML = [ { id: 'profil', label: 'Profil', icon: 'fa-user' }, ...menuItems, { id: 'unutma', label: 'Unutma Eğrisi', icon: 'fa-brain' } ].map(item => `
+                <button onclick="navigate('${item.id}')" id="nav-${item.id}" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-gray-400 hover:bg-gray-800"><i class="fas ${item.icon}"></i><span class="font-medium">${item.label}</span></button>
             `).join('');
-
+            
             document.getElementById('mobile-nav').innerHTML = menuItems.map(item => `
-                <button onclick="navigate('${item.id}')" id="mob-nav-${item.id}" class="mobile-sidebar-item flex flex-col items-center justify-center p-2 text-gray-400 transition rounded-xl">
-                    <i class="fas ${item.icon} text-lg mb-1"></i><span class="text-[9px] font-bold text-center">${item.label}</span>
-                </button>
+                <button onclick="navigate('${item.id}')" id="mob-nav-${item.id}" class="mobile-sidebar-item shrink-0 w-[72px] flex flex-col items-center justify-center p-2 text-gray-400 transition rounded-xl"><i class="fas ${item.icon} text-lg mb-1"></i><span class="text-[9px] font-bold text-center leading-tight">${item.label}</span></button>
             `).join('');
         }
 
@@ -315,16 +280,12 @@
             if(document.getElementById(`mob-nav-${id}`)) document.getElementById(`mob-nav-${id}`).classList.add('active');
             
             const container = document.getElementById('view-container');
-            const titles = { 'profil':'Profil', 'program':'Programım', 'kronometre':'Kronometre', 'deneme':'Deneme Analizi', 'performans':'Performansım', 'unutma':'Unutma Eğrisi', 'ayarlar':'Ayarlar' };
+            const titles = { 'profil':'Profil', 'program':'Programım', 'konular': 'Konularım', 'kronometre':'Kronometre', 'deneme':'Deneme Analizi', 'performans':'Performansım', 'unutma':'Unutma Eğrisi', 'ayarlar':'Ayarlar' };
             document.getElementById('view-title').innerText = titles[id] || "Panel";
 
-            if(id === 'profil') renderProfil(container);
-            else if(id === 'program') renderProgram(container);
-            else if(id === 'kronometre') renderKronometre(container);
-            else if(id === 'deneme') renderDeneme(container);
-            else if(id === 'performans') renderPerformans(container);
-            else if(id === 'unutma') renderUnutma(container);
-            else if(id === 'ayarlar') renderAyarlar(container);
+            if(id === 'profil') renderProfil(container); else if(id === 'program') renderProgram(container); else if(id === 'konular') renderKonular(container);
+            else if(id === 'kronometre') renderKronometre(container); else if(id === 'deneme') renderDeneme(container); else if(id === 'performans') renderPerformans(container);
+            else if(id === 'unutma') renderUnutma(container); else if(id === 'ayarlar') renderAyarlar(container);
         }
 
         // ==========================================
@@ -336,19 +297,54 @@
         function uploadPhoto(e) { const r = new FileReader(); r.onload=(ev)=>{appData.user.photo=ev.target.result;save();navigate('profil');}; r.readAsDataURL(e.target.files[0]); }
 
         // ==========================================
-        // KANBAN PROGRAM MODÜLÜ
+        // KONULARIM MODÜLÜ (Sadece Tik Listesi)
+        // ==========================================
+        function renderKonular(el) {
+            let html = `<div class="space-y-4 pb-10"><div class="p-4 bg-gray-800/50 rounded-xl text-sm text-gray-400"><i class="fas fa-info-circle text-blue-500 mr-2"></i>Bu sekme sadece ilerlemenizi görsel olarak takip etmeniz içindir. Unutma eğrisi buradaki tikleri değil, <b>Programım</b> ve <b>Kronometre</b> sekmesindeki çalışmalarınızı dikkate alır.</div>`;
+            for (let exam in tytAytKonulari) {
+                html += `<h3 class="text-xl font-bold text-blue-500 border-b border-gray-800 pb-2">${exam} Müfredatı</h3>`;
+                for (let ders in tytAytKonulari[exam]) {
+                    html += `
+                        <details class="glass rounded-xl overflow-hidden group">
+                            <summary class="p-4 cursor-pointer font-semibold flex justify-between items-center hover:bg-white/5 transition select-none">
+                                ${ders} <span class="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">${tytAytKonulari[exam][ders].length} Konu</span>
+                            </summary>
+                            <div class="p-4 bg-black/20 grid md:grid-cols-2 gap-2 border-t border-gray-800/50">
+                                ${tytAytKonulari[exam][ders].map(konu => {
+                                    const key = `${exam}-${ders}-${konu}`;
+                                    const checked = appData.subjects[key] ? 'checked' : '';
+                                    return `
+                                        <label class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-700">
+                                            <input type="checkbox" onchange="toggleSubject('${key}')" ${checked} class="w-5 h-5 accent-blue-500 rounded">
+                                            <span class="${checked ? 'line-through text-gray-500' : 'text-sm'}">${konu}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </details>
+                    `;
+                }
+            }
+            el.innerHTML = html + "</div>";
+        }
+        function toggleSubject(key) {
+            if (appData.subjects[key]) delete appData.subjects[key];
+            else appData.subjects[key] = true; // Sadece true kaydediyoruz, tarih değil.
+            save();
+        }
+
+        // ==========================================
+        // KANBAN PROGRAM MODÜLÜ (Akıllı Asistanlı)
         // ==========================================
         let currentWeekOffset = 0; let currentTaskDate = ''; let currentTaskDayName = '';
         function getWeekDates(offset = 0) {
             const curr = new Date(); const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1) + (offset * 7);
             let monday = new Date(curr.setDate(first));
-            const daysArr = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-            let week = [];
+            const daysArr = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']; let week = [];
             for (let i = 0; i < 7; i++) {
                 let next = new Date(monday); next.setDate(monday.getDate() + i);
                 week.push({ dayName: daysArr[next.getDay()], dateStr: formatDateNumeric(next) });
-            }
-            return week;
+            } return week;
         }
 
         function renderProgram(el) {
@@ -356,31 +352,92 @@
             let html = `<div class="flex justify-between items-center mb-4 glass p-3 rounded-xl sticky top-0 z-10 bg-brand-bg/90 backdrop-blur"><button onclick="currentWeekOffset--; renderProgram(document.getElementById('view-container'))" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition text-sm"><i class="fas fa-chevron-left"></i></button><div class="text-center"><h3 class="font-bold text-blue-400">${currentWeekOffset===0?'Bu Hafta':(currentWeekOffset<0?'Geçmiş':'Gelecek')}</h3><p class="text-xs text-gray-400 font-mono">${weekDates[0].dateStr} - ${weekDates[6].dateStr}</p></div><button onclick="currentWeekOffset++; renderProgram(document.getElementById('view-container'))" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition text-sm"><i class="fas fa-chevron-right"></i></button></div><div class="flex gap-4 overflow-x-auto h-[calc(100%-80px)] snap-x pb-4 hide-scroll items-start">`;
             
             weekDates.forEach(dayObj => {
-                html += `<div class="min-w-[280px] w-[280px] shrink-0 snap-center glass rounded-2xl p-4 flex flex-col h-full max-h-[calc(100vh-220px)]"><div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2"><h3 class="font-bold text-blue-400 flex flex-col"><span><i class="fas fa-calendar-day mr-1"></i> ${dayObj.dayName}</span><span class="text-xs text-gray-400 font-mono mt-1">${dayObj.dateStr}</span></h3><span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full" id="count-${dayObj.dateStr}">0</span></div><div id="tasks-${dayObj.dateStr}" class="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[100px] hide-scroll"></div><button onclick="currentTaskDate='${dayObj.dateStr}'; currentTaskDayName='${dayObj.dayName}'; document.getElementById('task-modal').classList.remove('hidden');" class="mt-3 w-full py-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl font-bold transition border border-dashed border-blue-500/50 flex items-center justify-center gap-2 group"><i class="fas fa-plus group-hover:scale-125 transition"></i> Ekle</button></div>`;
-            });
-            el.innerHTML = html + `</div>`;
+                html += `<div class="min-w-[280px] w-[280px] shrink-0 snap-center glass rounded-2xl p-4 flex flex-col h-full max-h-[calc(100vh-220px)]"><div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2"><h3 class="font-bold text-blue-400 flex flex-col"><span><i class="fas fa-calendar-day mr-1"></i> ${dayObj.dayName}</span><span class="text-xs text-gray-400 font-mono mt-1">${dayObj.dateStr}</span></h3><span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full" id="count-${dayObj.dateStr}">0</span></div><div id="tasks-${dayObj.dateStr}" class="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[100px] hide-scroll"></div><button onclick="currentTaskDate='${dayObj.dateStr}'; currentTaskDayName='${dayObj.dayName}'; document.getElementById('task-modal').classList.remove('hidden'); populateSuggestions();" class="mt-3 w-full py-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl font-bold transition border border-dashed border-blue-500/50 flex items-center justify-center gap-2 group"><i class="fas fa-plus group-hover:scale-125 transition"></i> Ekle</button></div>`;
+            }); el.innerHTML = html + `</div>`;
             
             let counts = {}; weekDates.forEach(d => counts[d.dateStr] = 0);
             appData.tasks.forEach(t => {
-                const container = document.getElementById(`tasks-${t.date}`);
-                if(!container) return; counts[t.date]++;
-                const isDone = t.status === 'done';
+                const container = document.getElementById(`tasks-${t.date}`); if(!container) return; counts[t.date]++; const isDone = t.status === 'done';
                 container.innerHTML = `<div class="p-3 bg-gray-800/80 rounded-xl border border-gray-700 ${isDone?'opacity-50 grayscale':''} transition relative overflow-hidden"><div class="flex justify-between items-start mb-1"><div class="text-xs font-bold text-gray-400 bg-black/20 px-2 py-0.5 rounded">${t.ders}</div><div class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">${t.q} Soru</div></div><div class="text-sm font-medium text-gray-100 leading-snug mb-3">${t.konu}</div><div class="flex justify-end gap-2 border-t border-gray-700/50 pt-2">${!isDone?`<button onclick="doneTask(${t.id})" class="w-8 h-8 rounded-lg bg-green-600/20 text-green-500 hover:bg-green-600 hover:text-white flex items-center justify-center transition"><i class="fas fa-check text-sm"></i></button>`:`<span class="text-xs text-green-500 mr-auto"><i class="fas fa-check-circle"></i> Bitti</span>`}<button onclick="appData.tasks=appData.tasks.filter(x=>x.id!==${t.id});save();renderProgram(document.getElementById('view-container'));" class="w-8 h-8 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition"><i class="fas fa-trash text-sm"></i></button></div></div>` + container.innerHTML;
             });
             weekDates.forEach(d => { if(document.getElementById(`count-${d.dateStr}`)) document.getElementById(`count-${d.dateStr}`).innerText = counts[d.dateStr]; });
         }
 
+        // --- AKILLI ASİSTAN (ÖNERİ MOTORU) ---
+        function populateSuggestions() {
+            let suggestions = [];
+            const now = Date.now();
+            
+            // 1. Eğriden gelenler (Artık appData.studyDates üzerinden okuyor)
+            for(let konuAdi in appData.studyDates) {
+                const days = Math.floor((now - appData.studyDates[konuAdi])/(1000*60*60*24));
+                if(days >= 3 && days < 5) suggestions.push({ text: konuAdi, type: '3. Gün Tekrarı', color: 'yellow' });
+                else if(days >= 7 && days < 9) suggestions.push({ text: konuAdi, type: '7. Gün Tekrarı', color: 'yellow' });
+                else if(days >= 30 && days < 33) suggestions.push({ text: konuAdi, type: '30. Gün Tekrarı', color: 'yellow' });
+            }
+            
+            // 2. Deneme Analizinden gelenler
+            appData.exams.forEach(e => {
+                if(e.topics) {
+                    e.topics.forEach(t => {
+                        if(t.status.includes('Yanlış') || t.status.includes('Boş')) {
+                            if(!suggestions.find(s => s.text === t.name)) suggestions.push({ text: t.name, type: 'Deneme Eksiği', color: 'red' });
+                        }
+                    });
+                }
+            });
+            
+            const c = document.getElementById('smart-suggestions');
+            if(suggestions.length === 0) {
+                c.innerHTML = '<span class="text-xs text-gray-500 p-2">Harikasın! Şu an için eksik konu veya tekrar önerisi yok.</span>';
+            } else {
+                c.innerHTML = suggestions.slice(0, 7).map(s => `
+                    <button type="button" onclick="autoFillTask('${s.text.replace(/'/g,"\\'")}')" class="text-[10px] px-2 py-1.5 rounded-lg bg-${s.color}-500/20 text-${s.color}-400 border border-${s.color}-500/30 hover:bg-${s.color}-500 hover:text-white transition whitespace-nowrap">
+                        <i class="fas ${s.color === 'yellow' ? 'fa-history' : 'fa-exclamation-circle'} mr-1"></i> ${s.text}
+                    </button>
+                `).join('');
+            }
+        }
+
+        function autoFillTask(konuName) {
+            let foundDers = ""; let exactKonu = "";
+            const searchName = konuName.toLowerCase();
+            for(let ex in tytAytKonulari) {
+                for(let d in tytAytKonulari[ex]) {
+                    for(let k of tytAytKonulari[ex][d]) {
+                        if(k.toLowerCase().includes(searchName) || searchName.includes(k.toLowerCase())) {
+                            foundDers = `${ex}-${d}`; exactKonu = k; break;
+                        }
+                    }
+                    if(foundDers) break;
+                }
+                if(foundDers) break;
+            }
+            if(foundDers) {
+                document.getElementById('modal-ders').value = foundDers;
+                updateModalSubj();
+                document.getElementById('modal-konu').value = exactKonu;
+                showToast("Ders ve Konu otomatik seçildi!", "success");
+            } else {
+                // Eğer müfredatta tam ismini bulamazsa, manuel girilmesi için text'i yazarız.
+                // Bu durumda özel konu gibi davranması için select yapısını iptal etmiyoruz ama kullanıcıyı uyarıyoruz.
+                showToast(`Eksik konu: ${konuName}. Lütfen listeden en yakın dersi/konuyu seçin.`, "warning");
+            }
+        }
+
         function updateModalSubj() { const [ex, d] = document.getElementById('modal-ders').value.split('-'); document.getElementById('modal-konu').innerHTML = tytAytKonulari[ex][d].map(k=>`<option value="${k}">${k}</option>`).join(''); }
+        
         function saveTaskModal() {
             const d = document.getElementById('modal-ders').value, k = document.getElementById('modal-konu').value, q = document.getElementById('modal-q').value;
-            if(!d || !k) return;
+            if(!d || !k) return showToast("Ders ve konu seçmelisin!", "error");
             appData.tasks.push({ id: Date.now(), date: currentTaskDate, day: currentTaskDayName, ders: d.replace('-',' '), konu: k, q: parseInt(q)||0, status: 'pending' });
-            save(); document.getElementById('task-modal').classList.add('hidden'); renderProgram(document.getElementById('view-container'));
+            save(); document.getElementById('task-modal').classList.add('hidden'); renderProgram(document.getElementById('view-container')); showToast("Görev Eklendi!", "success");
         }
+        
         function doneTask(id) {
-            const t = appData.tasks.find(x=>x.id===id); t.status = 'done';
-            appData.performance.totalQuestions += t.q;
+            const t = appData.tasks.find(x=>x.id===id); t.status = 'done'; appData.performance.totalQuestions += t.q;
             appData.performance.history.push({ id: Date.now(), date: formatDateNumeric(new Date()), mins: 0, qs: t.q, subject: t.konu });
+            appData.studyDates[t.konu] = Date.now(); // Eğri için çalışılan tarihi kaydet
             save(); renderProgram(document.getElementById('view-container')); showToast(`${t.q} soru eklendi!`, "success");
         }
 
@@ -401,8 +458,7 @@
             } else {
                 appData.stopwatch.running = false; clearInterval(swInt);
                 document.getElementById('sw-start-btn').innerText = 'DEVAM ET'; document.getElementById('sw-start-btn').className = 'px-8 py-4 bg-green-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95';
-            }
-            save();
+            } save();
         }
 
         function updateSW() {
@@ -417,8 +473,7 @@
         function lapSW() {
             if(!appData.stopwatch.running && appData.stopwatch.elapsed === 0) return;
             const curr = appData.stopwatch.running ? (Date.now() - appData.stopwatch.startTime) : appData.stopwatch.elapsed;
-            const lapElapsed = curr - (appData.stopwatch.lastLapElapsed || 0);
-            appData.stopwatch.lastLapElapsed = curr;
+            const lapElapsed = curr - (appData.stopwatch.lastLapElapsed || 0); appData.stopwatch.lastLapElapsed = curr;
             const s = Math.floor(lapElapsed/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
             appData.activeLaps.unshift({ id: Date.now(), timeStr: `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`, mins: Math.floor(lapElapsed/60000) });
             save(); renderLaps();
@@ -427,9 +482,7 @@
         function renderLaps() {
             const c = document.getElementById('laps-list'); if(!c) return;
             if(appData.activeLaps.length === 0) { c.innerHTML = '<div class="text-gray-500 text-sm text-center mt-10"><i class="fas fa-stopwatch text-3xl mb-2 opacity-30"></i><br>Tur kaydı yok.</div>'; return; }
-            c.innerHTML = appData.activeLaps.map((lap, i) => `
-                <div class="p-3 bg-gray-800/80 rounded-xl border border-gray-700 animate-in slide-in-from-left-4"><div class="flex justify-between items-center mb-2"><span class="font-bold text-blue-400 text-sm">Tur ${appData.activeLaps.length - i}</span><span class="font-mono text-sm bg-black/40 px-2 py-1 rounded">${lap.timeStr}</span></div><input type="text" id="lap-subj-${lap.id}" placeholder="Konu/Ders" class="w-full bg-black/40 p-2 rounded-lg text-sm border border-gray-700 mb-2 outline-none"><div class="flex gap-2"><input type="number" id="lap-q-${lap.id}" placeholder="Soru Sayısı" class="w-full bg-black/40 p-2 rounded-lg text-sm border border-gray-700 outline-none"><button onclick="saveLap(${lap.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Kaydet</button></div></div>
-            `).join('');
+            c.innerHTML = appData.activeLaps.map((lap, i) => `<div class="p-3 bg-gray-800/80 rounded-xl border border-gray-700 animate-in slide-in-from-left-4"><div class="flex justify-between items-center mb-2"><span class="font-bold text-blue-400 text-sm">Tur ${appData.activeLaps.length - i}</span><span class="font-mono text-sm bg-black/40 px-2 py-1 rounded">${lap.timeStr}</span></div><input type="text" id="lap-subj-${lap.id}" placeholder="Konu/Ders" class="w-full bg-black/40 p-2 rounded-lg text-sm border border-gray-700 mb-2 outline-none"><div class="flex gap-2"><input type="number" id="lap-q-${lap.id}" placeholder="Soru Sayısı" class="w-full bg-black/40 p-2 rounded-lg text-sm border border-gray-700 outline-none"><button onclick="saveLap(${lap.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Kaydet</button></div></div>`).join('');
         }
 
         function saveLap(id) {
@@ -437,16 +490,16 @@
             const lap = appData.activeLaps[idx], subj = document.getElementById(`lap-subj-${id}`).value || 'Genel', qs = parseInt(document.getElementById(`lap-q-${id}`).value) || 0;
             appData.performance.totalMinutes += lap.mins; appData.performance.totalQuestions += qs;
             appData.performance.history.push({ id: Date.now(), date: formatDateNumeric(new Date()), mins: lap.mins, qs, subject: subj });
+            if(subj !== 'Genel') appData.studyDates[subj] = Date.now(); // Eğri için çalışılan tarihi kaydet
             appData.activeLaps.splice(idx, 1); save(); renderLaps(); showToast("Tur kaydedildi!", "success");
         }
 
         function resetSW() { appData.stopwatch = { running: false, startTime: null, elapsed: 0, lastLapElapsed: 0 }; clearInterval(swInt); save(); updateSW(); document.getElementById('sw-start-btn').innerText = 'BAŞLAT'; document.getElementById('sw-start-btn').className = 'px-8 py-4 bg-green-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95'; }
 
         // ==========================================
-        // DENEME ANALİZİ & GRAFİKLER & İSİMLENDİRME
+        // DENEME ANALİZİ (OTOMATİK SAYISAL/NET HESABI, İSİM, EKSİK KONU)
         // ==========================================
         let viewMode = 'list'; 
-        let currentExamIdForAnalysis = null;
 
         function renderDeneme(el) {
             el.innerHTML = `
@@ -463,32 +516,26 @@
         function renderDenemeList() {
             return `
             <div class="grid lg:grid-cols-2 gap-6 pb-10">
-                <div class="space-y-6">
-                    <div class="glass p-6 rounded-2xl group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition pointer-events-none"></div>
-                        <h3 class="font-bold mb-2 text-blue-400 flex items-center gap-2"><i class="fas fa-file-pdf"></i> Akıllı Sınav Okuyucu (Sayısal)</h3>
-                        <p class="text-xs text-gray-400 mb-4">Sayısal modu aktiftir. PDF yüklersen netleri ve eksik konuları otomatik bulur.</p>
-                        
-                        <div class="grid grid-cols-2 gap-2 mb-4">
-                            <div>
-                                <label class="text-xs text-gray-400">Okunacak Alan:</label>
-                                <select id="exam-alan" class="w-full bg-gray-800 p-2 rounded-lg border border-gray-700 text-sm mt-1 outline-none text-white font-bold">
-                                    <option value="SAY">Sayısal (Mat + Fen)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-400">Deneme Adı (İsteğe Bağlı):</label>
-                                <input type="text" id="exam-name-input" placeholder="Örn: 3D TR Geneli" class="w-full bg-gray-800 p-2 rounded-lg border border-gray-700 text-sm mt-1 outline-none text-white font-bold">
-                            </div>
-                        </div>
-
-                        <label class="w-full py-10 border-2 border-dashed border-gray-600 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition bg-black/20">
-                            <i class="fas fa-copy text-4xl text-gray-500 mb-2 group-hover:text-blue-400"></i><span class="font-bold text-gray-300">PDF Seç (Toplu)</span>
-                            <input type="file" accept="application/pdf" multiple class="hidden" onchange="handlePDFUpload(event)">
-                        </label>
-                        <div id="pdf-loading" class="hidden mt-4 text-center text-sm text-blue-400 animate-pulse font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> PDF Okunuyor...</div>
+                <div class="glass p-6 rounded-2xl group relative overflow-hidden h-fit">
+                    <div class="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition pointer-events-none"></div>
+                    <h3 class="font-bold mb-2 text-blue-400 flex items-center gap-2"><i class="fas fa-robot"></i> Akıllı Sınav Okuyucu</h3>
+                    <p class="text-xs text-gray-400 mb-4">PDF yüklersen netleri ve MEB alt konularındaki eksiklerini otomatik bulur.</p>
+                    
+                    <div class="mb-4">
+                        <label class="text-xs text-gray-400">Okunacak Alan:</label>
+                        <select id="exam-alan" class="w-full bg-gray-800 p-2 rounded-lg border border-gray-700 text-sm mt-1 outline-none text-white font-bold">
+                            <option value="SAY">Sayısal (Mat + Fen) - Diğerlerini yoksayar</option>
+                            <option value="TUM">Tüm Dersleri Oku (TYT vb.)</option>
+                        </select>
                     </div>
+
+                    <label class="w-full py-8 border-2 border-dashed border-gray-600 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition bg-black/20">
+                        <i class="fas fa-copy text-4xl text-gray-500 mb-2 group-hover:text-blue-400"></i><span class="font-bold text-gray-300">PDF Seç (Toplu)</span>
+                        <input type="file" accept="application/pdf" multiple class="hidden" onchange="handlePDFUpload(event)">
+                    </label>
+                    <div id="pdf-loading" class="hidden mt-4 text-center text-sm text-blue-400 animate-pulse font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> PDF Okunuyor...</div>
                 </div>
+                
                 <div class="glass p-6 rounded-2xl flex flex-col">
                     <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2"><h3 class="font-bold text-blue-400">Geçmiş Denemeler</h3></div>
                     <div id="exam-list" class="space-y-3 overflow-y-auto flex-1 pr-2 hide-scroll max-h-[500px]"></div>
@@ -499,7 +546,6 @@
         async function handlePDFUpload(event) {
             const files = event.target.files; if (!files || files.length === 0) return;
             const alan = document.getElementById('exam-alan').value;
-            const baseName = document.getElementById('exam-name-input').value.trim();
             const loadingEl = document.getElementById('pdf-loading'); loadingEl.classList.remove('hidden');
             let successCount = 0;
             
@@ -511,42 +557,64 @@
                     let fullText = "";
                     for (let p = 1; p <= pdf.numPages; p++) fullText += (await (await pdf.getPage(p)).getTextContent()).items.map(item => item.str).join(" ") + " \n";
                     
-                    // İsimlendirme Mantığı: Kullanıcı isim girdiyse onu kullan, girmediyse PDF dosya adını kullan
-                    let examName = baseName ? (files.length > 1 ? `${baseName} (${i+1})` : baseName) : files[i].name.replace('.pdf', '');
-                    
-                    const examData = extractDataFromText(fullText, alan, examName);
+                    const examData = extractDataFromText(fullText, alan);
                     if(examData) { appData.exams.unshift(examData); successCount++; }
-                } catch (err) {}
+                } catch (err) { console.log(err); }
             }
             loadingEl.classList.add('hidden'); event.target.value = ''; 
-            if (successCount > 0) { save(); renderExams(); showToast(`${successCount} sınav eklendi.`, "success"); } else { showToast("Sınav tespit edilemedi.", "error"); }
+            if (successCount > 0) { save(); renderExams(); showToast(`${successCount} sınav ve eksik konular eklendi.`, "success"); } else { showToast("Sınav tespit edilemedi.", "error"); }
         }
 
-        function extractDataFromText(txt, alan, examName) {
+        function extractDataFromText(txt, alan) {
             if(!txt) return null;
-            let cleanTxt = txt.replace(/\r/g, ''); let lines = cleanTxt.split('\n');
-            let matD=0, matY=0, fizD=0, fizY=0, kimD=0, kimY=0, biyoD=0, biyoY=0;
+            let cleanTxt = txt.replace(/\r/g, '').replace(/Α/g, 'A').replace(/Υ/g, 'Y').replace(/Τ/g, 'T').replace(/Μ/g, 'M').replace(/Κ/g, 'K').replace(/Β/g, 'B');
+            let lines = cleanTxt.split('\n');
+
+            let isAYT = cleanTxt.match(/AYT|Sayısal|Edebiyat/i) !== null;
+            let isTYT = cleanTxt.match(/TYT|Temel Matematik/i) !== null;
+            let type = (isAYT && !isTYT) ? 'AYT' : 'TYT';
+            if (cleanTxt.match(/TYT-AYT/i)) type = 'AYT';
+
+            let examName = type + " Denemesi";
+            let nameMatch = cleanTxt.match(/([^\n]*?(?:YAYINLARI|DENEME|KURUMSAL)[^\n]*)/i);
+            if(nameMatch) examName = nameMatch[1].trim().substring(0,40);
+
+            let matD=0, matY=0, fenD=0, fenY=0, sosD=0, sosY=0, turkD=0, turkY=0;
             let autoTopics = [];
 
             for(let i=0; i<lines.length; i++) {
                 let line = lines[i];
-                let match = line.match(/(?:AYT|TYT)\.(MAT|FZK|KMY|BY|TRH|CGR|FLSF|DKAB|TDE)\.([\d\.]+)\s*(.*)/i);
+                let match = line.match(/(?:TYT|AYT)\.(MAT|FZK|KMY|BY|TRH|CGR|FLSF|DKAB|TDE|SYLJ|PSKL|MNTK)\.[\d\.]+\s+(.*)/i);
+                
                 if(match) {
-                    let dersKodu = match[1].toUpperCase(); let konuAdi = match[3].trim().substring(0,40);
-                    if(alan === 'SAY' && !['MAT','FZK','KMY','BY'].includes(dersKodu)) continue;
+                    let ders = match[1].toUpperCase();
+                    let konuRaw = match[2].trim().replace(/['"“”]/g, '');
+
+                    let isSAY = ['MAT','FZK','KMY','BY'].includes(ders);
+                    let isSOZ = ['TRH','CGR','FLSF','DKAB','TDE','SYLJ','PSKL','MNTK'].includes(ders);
+                    
+                    if (alan === 'SAY' && type === 'AYT' && !isSAY) continue;
+
                     let ctx = (lines[i-1]||'') + line + (lines[i+1]||'');
-                    let isCorrect = ctx.includes('+'); let isWrong = ctx.includes('-') || /[a-z]/.test(line.split('AYT')[0]||'');
+                    let isCorrect = ctx.includes('+');
                     
                     if(isCorrect) {
-                        if(dersKodu==='MAT') matD++; else if(dersKodu==='FZK') fizD++; else if(dersKodu==='KMY') kimD++; else if(dersKodu==='BY') biyoD++;
-                    } else if(isWrong) {
-                        if(dersKodu==='MAT') matY++; else if(dersKodu==='FZK') fizY++; else if(dersKodu==='KMY') kimY++; else if(dersKodu==='BY') biyoY++;
-                        autoTopics.push({ id: Date.now()+Math.random(), name: konuAdi, status: "Yanlış" });
-                    } else { autoTopics.push({ id: Date.now()+Math.random(), name: konuAdi, status: "Boş" }); }
+                        if(ders==='MAT') matD++; else if(['FZK','KMY','BY'].includes(ders)) fenD++; else if(isSOZ) sosD++; else turkD++;
+                    } else {
+                        if(ders==='MAT') matY++; else if(['FZK','KMY','BY'].includes(ders)) fenY++; else if(isSOZ) sosY++; else turkY++;
+                        
+                        let konuSade = konuRaw.replace(/(açıklar|kavrar|çözer|belirler|örnekler verir|analiz eder|fark eder|irdeler|sınıflandırarak|yorumlar|ile ilgili).*?/gi, '').trim();
+                        if(konuSade.endsWith(',')) konuSade = konuSade.slice(0, -1);
+                        if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Yanlış/Boş" });
+                    }
                 }
             }
 
-            let matN = matD - (matY * 0.25); let fenN = (fizD+kimD+biyoD) - ((fizY+kimY+biyoY) * 0.25); let totalNet = matN + fenN;
+            let matN = matD - (matY * 0.25); let fenN = fenD - (fenY * 0.25); let sosN = sosD - (sosY * 0.25); let turkN = turkD - (turkY * 0.25);
+            let totalNet = 0;
+
+            if(alan === 'SAY' && type === 'AYT') totalNet = matN + fenN;
+            else totalNet = matN + fenN + sosN + turkN;
 
             if(totalNet <= 0) {
                 const fb = txt.match(/(?:120|160|166|80)\s+\d{1,3}\s+\d{1,3}\s+\d{1,3}\s+(\d{1,3}(?:,\d{1,2})?)/);
@@ -555,12 +623,18 @@
 
             let details = [];
             if(matD>0||matY>0) details.push(`Mat: ${matN}N (${matD}D ${matY}Y)`); 
-            if(fizD>0||kimD>0||biyoD>0) details.push(`Fen: ${fenN}N (${fizD+kimD+biyoD}D ${fizY+kimY+biyoY}Y)`);
+            if(type === 'AYT' && alan === 'SAY') {
+                if(fenD>0||fenY>0) details.push(`Fen: ${fenN}N (${fenD}D ${fenY}Y)`);
+            } else {
+                if(fenD>0||fenY>0) details.push(`Fen: ${fenN}N`);
+                if(turkD>0||turkY>0) details.push(`Tür: ${turkN}N`);
+                if(sosD>0||sosY>0) details.push(`Sos: ${sosN}N`);
+            }
 
             let uniqueTopics = []; autoTopics.forEach(t => { if(!uniqueTopics.find(x => x.name === t.name)) uniqueTopics.push(t); });
 
             if(totalNet <= 0) return null;
-            return { id: Date.now() + Math.floor(Math.random()*1000), name: examName || 'Deneme', date: formatDateNumeric(new Date()), type: 'AYT', net: totalNet, details: details.join(' | ') || "Net Hesaplandı", topics: uniqueTopics };
+            return { id: Date.now() + Math.floor(Math.random()*1000), name: examName, date: formatDateNumeric(new Date()), type: type, net: totalNet, details: details.join(' | ') || "Net Hesaplandı", topics: uniqueTopics };
         }
 
         function renderExams() {
@@ -577,7 +651,7 @@
                     </div>
                     <div class="text-xs text-gray-400 bg-black/20 px-2 py-1 rounded mb-3">${e.details}</div>
                     <div class="flex justify-between items-center border-t border-gray-700/50 pt-2">
-                        <button onclick="openExamAnalysisModal(${e.id})" class="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"><i class="fas fa-microscope"></i> Konu Analizi (${e.topics.length})</button>
+                        <button onclick="openExamAnalysisModal(${e.id})" class="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"><i class="fas fa-microscope"></i> Eksikler (${e.topics.length})</button>
                         <button onclick="deleteExam(${e.id})" class="w-8 h-8 rounded bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition"><i class="fas fa-trash text-sm"></i></button>
                     </div>
                 </div>
@@ -594,13 +668,13 @@
             return `
             <div class="grid lg:grid-cols-2 gap-6 pb-10">
                 <div class="space-y-6">
-                    <div class="glass p-4 rounded-2xl h-80 flex flex-col">
-                        <h3 class="font-bold text-blue-400 mb-2 text-center">Net Gelişimi</h3>
-                        <div class="flex-1 relative"><canvas id="aytChart"></canvas></div>
+                    <div class="glass p-4 rounded-2xl h-[400px] flex flex-col">
+                        <h3 class="font-bold text-blue-400 mb-2 text-center">Tüm Net Gelişimi (TYT/AYT)</h3>
+                        <div class="flex-1 relative w-full"><canvas id="examChart"></canvas></div>
                     </div>
                 </div>
                 <div class="glass p-6 rounded-2xl h-fit">
-                    <h3 class="font-bold text-red-400 mb-4 border-b border-gray-700 pb-2"><i class="fas fa-exclamation-circle mr-2"></i>En Çok Hata Yapılan Konular</h3>
+                    <h3 class="font-bold text-red-400 mb-4 border-b border-gray-700 pb-2"><i class="fas fa-exclamation-circle mr-2"></i>Sık Hata Yapılan (PDF Tespitli)</h3>
                     <div class="space-y-3">
                         ${sortedTopics.length === 0 ? '<p class="text-gray-500 text-sm text-center">Henüz eksik konu analizi girmediniz.</p>' : 
                           sortedTopics.map(t => `<div class="flex justify-between bg-black/20 p-3 rounded-lg border border-gray-700/50"><span class="text-sm font-medium pr-2">${t[0]}</span><span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded whitespace-nowrap">${t[1]} Hata</span></div>`).join('')}
@@ -610,9 +684,9 @@
         }
 
         function drawCharts() {
-            const exams = appData.exams.reverse();
-            if(document.getElementById('aytChart') && exams.length > 0) {
-                new Chart(document.getElementById('aytChart'), { 
+            const exams = appData.exams.slice().reverse(); 
+            if(document.getElementById('examChart') && exams.length > 0) {
+                new Chart(document.getElementById('examChart'), { 
                     type: 'line', 
                     data: { 
                         labels: exams.map(e => e.name.length > 15 ? e.name.substring(0,15)+'...' : e.name), 
@@ -620,9 +694,9 @@
                     }, 
                     options: { 
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: {display: false} }, 
+                        plugins: { legend: {display: false}, tooltip: {callbacks: { label: (ctx)=> ` ${ctx.raw} Net` }} }, 
                         scales: { 
-                            x: { ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            x: { ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45, font: {size: 10} }, grid: { color: 'rgba(255,255,255,0.05)' } },
                             y: { beginAtZero: true, max: 120, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } } 
                         } 
                     } 
@@ -710,14 +784,16 @@
         // ==========================================
         function renderUnutma(el) {
             const alerts = []; const now = Date.now();
-            for(let k in appData.subjects) {
-                const days = Math.floor((now - appData.subjects[k].date)/(1000*60*60*24));
-                if(days === 3 || days === 7 || days === 30) alerts.push({ konu: k.split('-').pop(), days });
+            for(let k in appData.studyDates) {
+                const days = Math.floor((now - appData.studyDates[k])/(1000*60*60*24));
+                if(days >= 3 && days < 5) alerts.push({ konu: k, days: 3 });
+                else if(days >= 7 && days < 9) alerts.push({ konu: k, days: 7 });
+                else if(days >= 30 && days < 33) alerts.push({ konu: k, days: 30 });
             }
-            el.innerHTML = `<div class="space-y-4 max-w-2xl mx-auto pb-10"><div class="p-5 bg-blue-600/10 border border-blue-500/30 rounded-2xl text-sm leading-relaxed flex items-start gap-4"><i class="fas fa-info-circle text-blue-500 text-2xl mt-0.5"></i><div><span class="font-bold text-blue-400 block mb-1">Ebbinghaus Unutma Eğrisi</span>Bitirdiğin konular 3., 7. ve 30. günlerinde burada tekrar kartı olarak karşına çıkar.</div></div>${alerts.length === 0 ? '<div class="text-center p-10 glass rounded-2xl text-gray-500">Bugün tekrar yok.</div>' : alerts.map(a=>`<div class="glass p-5 rounded-xl border-l-4 border-yellow-500 flex justify-between items-center"><div><div class="text-[10px] text-yellow-500 font-bold uppercase tracking-widest mb-1"><i class="fas fa-history mr-1"></i> ${a.days}. GÜN TEKRARI</div><div class="text-xl font-bold">${a.konu}</div></div><button class="w-10 h-10 rounded-full bg-gray-800 hover:bg-yellow-600 transition"><i class="fas fa-check"></i></button></div>`).join('')}</div>`;
+            el.innerHTML = `<div class="space-y-4 max-w-2xl mx-auto pb-10"><div class="p-5 bg-blue-600/10 border border-blue-500/30 rounded-2xl text-sm leading-relaxed flex items-start gap-4"><i class="fas fa-info-circle text-blue-500 text-2xl mt-0.5"></i><div><span class="font-bold text-blue-400 block mb-1">Ebbinghaus Unutma Eğrisi</span>Çalıştığın konular 3., 7. ve 30. günlerinde burada tekrar kartı olarak karşına çıkar.</div></div>${alerts.length === 0 ? '<div class="text-center p-10 glass rounded-2xl text-gray-500">Bugün tekrar yok.</div>' : alerts.map(a=>`<div class="glass p-5 rounded-xl border-l-4 border-yellow-500 flex justify-between items-center"><div><div class="text-[10px] text-yellow-500 font-bold uppercase tracking-widest mb-1"><i class="fas fa-history mr-1"></i> ${a.days}. GÜN TEKRARI</div><div class="text-xl font-bold">${a.konu}</div></div><button class="w-10 h-10 rounded-full bg-gray-800 hover:bg-yellow-600 transition"><i class="fas fa-check"></i></button></div>`).join('')}</div>`;
         }
         function renderAyarlar(el) {
-            el.innerHTML = `<div class="max-w-md mx-auto space-y-6 pb-10"><button onclick="logout()" class="w-full py-3 bg-yellow-600 hover:bg-yellow-700 transition rounded-xl font-bold shadow-lg shadow-yellow-900/50 mb-4"><i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap</button><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-download-alt text-4xl text-blue-500 mb-4"></i><h3 class="font-bold mb-2">Verileri Yedekle</h3><button onclick="exportData()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 transition rounded-xl font-bold">İndir (.json)</button></div><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i><h3 class="font-bold mb-2">Veri Yükle</h3><label class="w-full py-3 bg-gray-700 hover:bg-gray-600 transition rounded-xl font-bold flex items-center justify-center cursor-pointer">Dosya Seç<input type="file" onchange="importData(event)" accept=".json" class="hidden"></label></div><button onclick="if(confirm('Emin misin?')){localStorage.removeItem('yks_analiz_data');location.reload();}" class="w-full py-4 text-red-500 border border-red-500/20 rounded-xl hover:bg-red-600 hover:text-white transition font-bold"><i class="fas fa-trash-alt mr-2"></i>Tüm Sistemi Sıfırla</button></div>`;
+            el.innerHTML = `<div class="max-w-md mx-auto space-y-6 pb-10"><button onclick="logout()" class="w-full py-3 bg-yellow-600 hover:bg-yellow-700 transition rounded-xl font-bold shadow-lg shadow-yellow-900/50 mb-4"><i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap</button><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-download-alt text-4xl text-blue-500 mb-4"></i><h3 class="font-bold mb-2">Verileri Yedekle</h3><button onclick="exportData()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 transition rounded-xl font-bold">İndir (.json)</button></div><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i><h3 class="font-bold mb-2">Veri Yükle</h3><label class="w-full py-3 bg-gray-700 hover:bg-gray-600 transition rounded-xl font-bold flex items-center justify-center cursor-pointer">Dosya Seç<input type="file" onchange="importData(event)" accept=".json" class="hidden"></label></div><button onclick="if(confirm('Emin misin?')){localStorage.removeItem('yks_analiz_data');localStorage.removeItem('yks_session');location.reload();}" class="w-full py-4 text-red-500 border border-red-500/20 rounded-xl hover:bg-red-600 hover:text-white transition font-bold"><i class="fas fa-trash-alt mr-2"></i>Tüm Sistemi Sıfırla</button></div>`;
         }
         function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(appData)], {type: 'application/json'})); a.download=`yks_yedek_${formatDateNumeric(new Date())}.json`; a.click(); }
         function importData(e) { const r = new FileReader(); r.onload=(ev)=>{ try { appData=JSON.parse(ev.target.result); save(); location.reload(); } catch(err) { showToast("Bozuk dosya!", "error"); } }; r.readAsText(e.target.files[0]); }
