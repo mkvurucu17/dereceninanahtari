@@ -2,21 +2,23 @@
 <html lang="tr" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>YKS Analiz Merkezi | Profesyonel Sınav Yönetimi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            light: '#3b82f6',
-                            dark: '#1d4ed8',
-                            bg: '#0f172a'
-                        }
+                        brand: { light: '#3b82f6', dark: '#1d4ed8', bg: '#0f172a' }
                     }
                 }
             }
@@ -24,16 +26,18 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: background 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; transition: background 0.3s ease; -webkit-tap-highlight-color: transparent; overflow: hidden; }
         .sidebar-item.active { @apply bg-blue-600 text-white; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .dark .glass { background: rgba(15, 23, 42, 0.8); }
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
-        
-        /* Fotoğraf yükleme alanı için */
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         .photo-upload-wrapper input[type="file"] { display: none; }
         .photo-upload-wrapper:hover .overlay { display: flex; }
+        input, select, textarea { font-size: 16px !important; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-brand-bg text-gray-900 dark:text-gray-100 min-h-screen">
@@ -44,39 +48,25 @@
                 <h1 class="text-3xl font-bold text-blue-500 italic">YKS Analiz Merkezi</h1>
                 <p class="text-gray-400 mt-2">Geleceğini Verilerle Yönet</p>
             </div>
-            
             <div id="login-selection" class="space-y-4">
                 <button onclick="showLoginForm('student')" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition flex items-center justify-center gap-3">
                     <i class="fas fa-user-graduate text-xl"></i> Öğrenci Girişi
                 </button>
-                <button onclick="alert('Beta Sürümü: Koç Girişi Yakında!')" class="w-full py-4 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition flex items-center justify-center gap-3">
-                    <i class="fas fa-chalkboard-teacher text-xl"></i> Koç Girişi (Beta)
-                </button>
-                <button onclick="alert('Beta Sürümü: Kurum Girişi Yakında!')" class="w-full py-4 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition flex items-center justify-center gap-3">
-                    <i class="fas fa-school text-xl"></i> Kurum Girişi (Beta)
-                </button>
             </div>
-
-            <form id="student-form" class="hidden space-y-4 animate-in fade-in duration-500">
+            <form id="student-form" class="hidden space-y-4">
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="schoolName" placeholder="Okul Adı" class="p-3 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none w-full" required>
-                    <input type="text" id="schoolNo" placeholder="Okul No" class="p-3 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none w-full" required>
+                    <input type="text" id="schoolName" placeholder="Okul Adı" class="p-3 rounded bg-gray-800 border border-gray-700 outline-none w-full" required>
+                    <input type="text" id="schoolNo" placeholder="Okul No" class="p-3 rounded bg-gray-800 border border-gray-700 outline-none w-full" required>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="firstName" placeholder="İsim" class="p-3 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none w-full" required>
-                    <input type="text" id="lastName" placeholder="Soyisim" class="p-3 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none w-full" required>
+                    <input type="text" id="firstName" placeholder="İsim" class="p-3 rounded bg-gray-800 border border-gray-700 outline-none w-full" required>
+                    <input type="text" id="lastName" placeholder="Soyisim" class="p-3 rounded bg-gray-800 border border-gray-700 outline-none w-full" required>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <select id="grade" class="p-3 rounded bg-gray-800 border border-gray-700 outline-none w-full">
-                        <option>12. Sınıf</option>
-                        <option>Mezun</option>
-                        <option>11. Sınıf</option>
+                        <option>12. Sınıf</option><option>Mezun</option><option>11. Sınıf</option>
                     </select>
-                    <input type="text" id="branch" placeholder="Şube (SAY/EA/SÖZ)" class="p-3 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none w-full">
-                </div>
-                <div class="flex items-center gap-2 p-2">
-                    <input type="checkbox" id="hasCoach" class="w-5 h-5 accent-blue-600">
-                    <label for="hasCoach" class="text-sm">Bir koçum var (Koç Takip Sekmesini Aç)</label>
+                    <input type="text" id="branch" placeholder="Şube (SAY/EA/SÖZ)" class="p-3 rounded bg-gray-800 border border-gray-700 outline-none w-full">
                 </div>
                 <button type="submit" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition">Sistemi Başlat</button>
             </form>
@@ -84,15 +74,12 @@
     </div>
 
     <div id="main-app" class="hidden flex h-screen overflow-hidden">
-        
-        <aside class="w-64 glass border-r border-gray-800 flex flex-col shrink-0">
+        <aside class="w-64 glass border-r border-gray-800 flex flex-col shrink-0 hidden md:flex">
             <div class="p-6 border-b border-gray-800 flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl text-white">Y</div>
                 <span class="font-bold text-sm tracking-widest uppercase">Analiz Merkezi</span>
             </div>
-            
             <nav class="flex-1 overflow-y-auto p-4 space-y-2" id="sidebar-nav"></nav>
-
             <div class="p-4 border-t border-gray-800">
                 <button onclick="toggleTheme()" class="w-full p-2 flex items-center justify-center gap-2 hover:bg-gray-800 rounded-lg transition">
                     <i class="fas fa-moon dark:hidden"></i>
@@ -102,726 +89,281 @@
             </div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto p-8 relative">
-            <header class="mb-8 flex justify-between items-center">
-                <h2 id="view-title" class="text-3xl font-bold">Hoş Geldin, <span id="user-display-name">...</span></h2>
-                <div id="timer-badge" class="hidden px-4 py-2 bg-red-600/20 text-red-500 rounded-full border border-red-500 animate-pulse font-mono font-bold">
-                    00:00:00
-                </div>
-            </header>
+        <div class="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-gray-800 flex justify-around p-2 z-40 bg-brand-bg/95" id="mobile-nav"></div>
 
-            <div id="view-container" class="animate-in slide-in-from-bottom-4 duration-500">
-                </div>
-            
-            <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 relative pb-24 md:pb-8">
+            <header class="mb-6 flex justify-between items-center">
+                <h2 id="view-title" class="text-2xl md:text-3xl font-bold">Hoş Geldin, <span id="user-display-name">...</span></h2>
+                <div id="timer-badge" class="hidden px-4 py-2 bg-red-600/20 text-red-500 rounded-full border border-red-500 animate-pulse font-mono font-bold">00:00:00</div>
+            </header>
+            <div id="view-container" class="animate-in slide-in-from-bottom-4 duration-500 h-[calc(100%-80px)]"></div>
+            <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
         </main>
     </div>
 
     <script>
-        /** MÜFREDAT VERİTABANI **/
         const tytAytKonulari = {
-            "TYT": {
-                "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf", "Ses Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri", "Sözcük Türleri", "Sözcükte Yapı", "Fiiller ve Fiilimsiler", "Cümlenin Ögeleri", "Cümle Türleri", "Anlatım Bozuklukları"],
-                "Matematik": ["Temel Kavramlar", "Sayı Basamakları", "Bölünebilme", "EBOB-EKOK", "Rasyonel Sayılar", "Basit Eşitsizlikler", "Mutlak Değer", "Üslü Sayılar", "Köklü Sayılar", "Çarpanlara Ayırma", "Oran-Orantı", "Denklem Çözme", "Problemler", "Kümeler", "Mantık", "Fonksiyonlar", "Permütasyon-Kombinasyon-Olasılık", "Veri-İstatistik"],
-                "Geometri": ["Doğruda ve Üçgende Açılar", "Özel Üçgenler", "Açıortay-Kenarortay", "Benzerlik", "Çokgenler ve Dörtgenler", "Çember ve Daire", "Katı Cisimler", "Analitik Geometri"],
-                "Fizik": ["Fizik Bilimine Giriş", "Madde ve Özellikleri", "Hareket ve Kuvvet", "İş, Güç, Enerji", "Isı ve Sıcaklık", "Elektrostatik", "Elektrik ve Manyetizma", "Basınç ve Kaldırma Kuvveti", "Dalgalar", "Optik"],
-                "Kimya": ["Kimya Bilimi", "Atom ve Periyodik Sistem", "Kimyasal Türler Arası Etkileşimler", "Maddenin Halleri", "Doğa ve Kimya", "Kimyanın Temel Kanunları ve Hesaplamalar", "Karışımlar", "Asitler, Bazlar ve Tuzlar", "Kimya Her Yerde"],
-                "Biyoloji": ["Canlıların Ortak Özellikleri", "İnorganik/Organik Bileşikler", "Hücre", "Canlıların Sınıflandırılması", "Hücre Bölünmeleri", "Kalıtım", "Ekosistem Ekolojisi"],
-                "Tarih": ["Tarih ve Zaman", "İnsanlığın İlk Dönemleri", "Orta Çağ'da Dünya", "İlk ve Orta Çağlarda Türk Dünyası", "İslam Medeniyeti", "Türklerin İslamiyet'i Kabulü", "Osmanlı Devleti Kuruluş/Yükselme/Duraklama/Gerileme/Dağılma", "İnkılap Tarihi"],
-                "Coğrafya": ["Doğa ve İnsan", "Dünya'nın Şekli ve Hareketleri", "Harita Bilgisi", "İklim Bilgisi", "Yerleşme", "Nüfus", "Ekonomik Faaliyetler", "Bölgeler", "Doğal Afetler"],
-                "Felsefe": ["Felsefeyi Tanıma", "Felsefe ile Düşünme", "Varlık Felsefesi", "Bilgi Felsefesi", "Bilim Felsefesi", "Ahlak Felsefesi", "Din Felsefesi", "Siyaset Felsefesi", "Sanat Felsefesi"],
-                "Din Kültürü": ["Bilgi ve İnanç", "Din ve İslam", "İslam ve İbadet", "Gençlik ve Değerler", "Allah İnsan İlişkisi", "Hz. Muhammed"]
-            },
-            "AYT": {
-                "Matematik": ["İkinci Dereceden Denklemler", "Karmaşık Sayılar", "Parabol", "Eşitsizlikler", "Polinomlar", "Logaritma", "Diziler", "Trigonometri", "Limit ve Süreklilik", "Türev", "İntegral"],
-                "Fizik": ["Vektörler ve Bağıl Hareket", "Newton'un Hareket Yasaları", "Atışlar", "İş, Güç ve Enerji", "İtme ve Momentum", "Tork ve Denge", "Elektriksel Kuvvet ve Potansiyel", "Manyetizma", "Çembersel Hareket", "Basit Harmonik Hareket", "Dalga Mekaniği", "Modern Fizik", "Radyoaktivite"],
-                "Kimya": ["Modern Atom Teorisi", "Gazlar", "Sıvı Çözeltiler", "Kimyasal Tepkimelerde Enerji", "Tepkimelerde Hız", "Kimyasal Denge", "Asit-Baz Dengesi", "Kçç", "Elektrokimya", "Karbon Kimyasına Giriş", "Organik Bileşikler"],
-                "Biyoloji": ["Sinir Sistemi", "Endokrin Sistem", "Duyu Organları", "Destek ve Hareket Sistemi", "Sindirim Sistemi", "Dolaşım ve Bağışıklık Sistemi", "Solunum Sistemi", "Boşaltım Sistemi", "Üreme Sistemi", "Popülasyon Ekolojisi", "Protein Sentezi", "Fotosentez ve Kemosentez", "Hücresel Solunum", "Bitkisel Dokular ve Organlar", "Bitkilerde Hareket ve Taşıma", "Bitkilerde Üreme"],
-                "Edebiyat": ["Şiir Bilgisi", "Söz Sanatları", "İslamiyet Öncesi Türk Edebiyatı", "Geçiş Dönemi", "Halk Edebiyatı", "Divan Edebiyatı", "Tanzimat Edebiyatı", "Servetifünun ve Fecriati", "Milli Edebiyat", "Cumhuriyet Dönemi Edebiyatı", "Edebi Akımlar"],
-                "Tarih": ["İlk Çağ Uygarlıkları", "Türklerin İslamiyet'i Kabulü", "Türkiye Selçuklu Devleti", "Osmanlı Siyasi Tarihi", "Osmanlı Kültür ve Medeniyeti", "XX. Yüzyıl Başlarında Osmanlı", "Milli Mücadele", "Atatürk İlke ve İnkılapları", "Çağdaş Türk ve Dünya Tarihi"],
-                "Coğrafya": ["Ekosistem ve Madde Döngüleri", "Ekstrem Doğa Olayları", "Nüfus Politikaları", "Türkiye'nin Tarım ve Hayvancılığı", "Türkiye'de Madenler ve Enerji Kaynakları", "Türkiye'de Sanayi", "Küresel Ticaret", "Ülkeler Arası Etkileşim", "Çevre Sorunları"],
-                "Felsefe Grubu": ["Psikolojinin Temel Süreçleri", "Öğrenme, Bellek, Düşünme", "Sosyolojiye Giriş", "Birey ve Toplum", "Toplumsal Kurumlar", "Klasik Mantık", "Sembolik Mantık"]
-            }
+            "TYT": { "Türkçe": ["Paragraf", "Dil Bilgisi"], "Matematik": ["Problemler", "Sayılar"] },
+            "AYT": { "Matematik": ["Türev", "İntegral"], "Fizik": ["Mekanik", "Elektrik"] }
         };
 
-        /** STATE MANAGEMENT **/
         let appData = {
-            user: { email: '', phone: '', photo: '' }, // Profil detayları eklendi
-            tasks: [], // Programım sekmesi için görevler
-            subjects: {}, // { "TYT-Matematik-Temel Kavramlar": true }
-            performance: { totalMinutes: 0, totalQuestions: 0, history: [] },
-            exams: [],
-            mistakeTracker: {}, // Konu bazlı yanlış takibi eklendi
-            stopwatch: { running: false, startTime: null, elapsed: 0 }
+            user: { firstName: '', lastName: '', schoolName: '', schoolNo: '', grade: '', branch: '', photo: '' },
+            tasks: [], subjects: {}, performance: { totalMinutes: 0, totalQuestions: 0, history: [] },
+            exams: [], stopwatch: { running: false, startTime: null, elapsed: 0 }
         };
 
-        /** INITIALIZATION **/
         window.onload = () => {
             const saved = localStorage.getItem('yks_analiz_data');
-            if (saved) {
-                appData = JSON.parse(saved);
-                if(!appData.mistakeTracker) appData.mistakeTracker = {}; // Geriye dönük uyumluluk
-                if(!appData.tasks) appData.tasks = [];
-                initApp();
-            }
+            if (saved) { appData = {...appData, ...JSON.parse(saved)}; initApp(); }
         };
 
-        function showLoginForm(type) {
-            document.getElementById('login-selection').classList.add('hidden');
-            document.getElementById('student-form').classList.remove('hidden');
-        }
+        function showLoginForm(type) { document.getElementById('login-selection').classList.add('hidden'); document.getElementById('student-form').classList.remove('hidden'); }
 
         document.getElementById('student-form').onsubmit = (e) => {
             e.preventDefault();
             appData.user = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                schoolName: document.getElementById('schoolName').value,
-                schoolNo: document.getElementById('schoolNo').value,
-                grade: document.getElementById('grade').value,
-                branch: document.getElementById('branch').value,
-                hasCoach: document.getElementById('hasCoach').checked,
-                email: '', phone: '', photo: ''
+                firstName: document.getElementById('firstName').value, lastName: document.getElementById('lastName').value,
+                schoolName: document.getElementById('schoolName').value, schoolNo: document.getElementById('schoolNo').value,
+                grade: document.getElementById('grade').value, branch: document.getElementById('branch').value
             };
-            save();
-            initApp();
+            save(); initApp();
         };
 
         function initApp() {
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('login-overlay').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('user-display-name').innerText = appData.user.firstName;
-            renderSidebar();
-            navigate('profil');
-            checkMistakes(); // Açılışta kronik yanlış uyarılarını kontrol et
+            renderSidebar(); navigate('deneme'); 
         }
 
-        function save() {
-            localStorage.setItem('yks_analiz_data', JSON.stringify(appData));
-        }
+        function save() { localStorage.setItem('yks_analiz_data', JSON.stringify(appData)); }
 
         function showToast(message, type = "warning") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const color = type === "warning" ? "bg-yellow-600" : "bg-green-600";
-            toast.className = `${color} text-white px-4 py-3 rounded-xl shadow-lg animate-in slide-in-from-right-8 fade-in duration-300 flex items-center gap-3`;
-            toast.innerHTML = `<i class="fas ${type === "warning" ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> <span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 5000);
+            toast.className = `bg-${type === 'success' ? 'green' : 'blue'}-600 text-white px-4 py-3 rounded-xl shadow-lg animate-in slide-in-from-right-8 duration-300 flex items-center gap-3`;
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> <span class="text-sm font-medium">${message}</span>`;
+            container.appendChild(toast); setTimeout(() => toast.remove(), 4000);
         }
 
-        /** ROUTING **/
         const menuItems = [
-            { id: 'profil', label: 'Profil', icon: 'fa-user' },
-            { id: 'program', label: 'Programım', icon: 'fa-calendar-check' },
-            { id: 'unutma', label: 'Unutma Eğrisi', icon: 'fa-brain' },
-            { id: 'kronometre', label: 'Kronometre', icon: 'fa-stopwatch' },
-            { id: 'konular', label: 'Konularım', icon: 'fa-list-ul' },
-            { id: 'deneme', label: 'Deneme Analizi', icon: 'fa-chart-line' },
-            { id: 'performans', label: 'Performansım', icon: 'fa-fire' },
-            { id: 'ayarlar', label: 'Ayarlar', icon: 'fa-cog' }
+            { id: 'profil', label: 'Profil', icon: 'fa-user' }, { id: 'program', label: 'Programım', icon: 'fa-calendar-alt' },
+            { id: 'kronometre', label: 'Kronometre', icon: 'fa-stopwatch' }, { id: 'deneme', label: 'Deneme Analizi', icon: 'fa-chart-line' },
+            { id: 'performans', label: 'Performansım', icon: 'fa-fire' }, { id: 'ayarlar', label: 'Ayarlar', icon: 'fa-cog' }
         ];
 
         function renderSidebar() {
-            const nav = document.getElementById('sidebar-nav');
-            let items = [...menuItems];
-            if (appData.user.hasCoach) {
-                items.splice(2, 0, { id: 'koc', label: 'Koç Takip', icon: 'fa-user-tie' });
-            }
-            nav.innerHTML = items.map(item => `
+            document.getElementById('sidebar-nav').innerHTML = menuItems.map(item => `
                 <button onclick="navigate('${item.id}')" id="nav-${item.id}" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-gray-400 hover:bg-gray-800">
-                    <i class="fas ${item.icon}"></i>
-                    <span class="font-medium">${item.label}</span>
+                    <i class="fas ${item.icon}"></i><span class="font-medium">${item.label}</span>
+                </button>
+            `).join('');
+            document.getElementById('mobile-nav').innerHTML = menuItems.filter(i=>['profil','program','kronometre','deneme'].includes(i.id)).map(item => `
+                <button onclick="navigate('${item.id}')" id="mob-nav-${item.id}" class="mobile-sidebar-item flex flex-col items-center p-2 text-gray-400 rounded-lg">
+                    <i class="fas ${item.icon} text-xl mb-1"></i><span class="text-[10px] font-medium">${item.label}</span>
                 </button>
             `).join('');
         }
 
         function navigate(id) {
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active', 'text-white'));
-            const activeNav = document.getElementById(`nav-${id}`);
-            if (activeNav) activeNav.classList.add('active', 'text-white');
+            document.querySelectorAll('.mobile-sidebar-item').forEach(el => el.classList.remove('text-blue-500'));
+            if(document.getElementById(`nav-${id}`)) document.getElementById(`nav-${id}`).classList.add('active', 'text-white');
+            if(document.getElementById(`mob-nav-${id}`)) document.getElementById(`mob-nav-${id}`).classList.add('text-blue-500');
             
             const container = document.getElementById('view-container');
             document.getElementById('view-title').innerText = menuItems.find(m => m.id === id)?.label || "Panel";
 
-            switch(id) {
-                case 'profil': renderProfil(container); break;
-                case 'konular': renderKonular(container); break;
-                case 'kronometre': renderKronometre(container); break;
-                case 'ayarlar': renderAyarlar(container); break;
-                case 'deneme': renderDeneme(container); break;
-                case 'program': renderProgram(container); break;
-                case 'performans': renderPerformans(container); break;
-                case 'unutma': renderUnutma(container); break;
-                default: container.innerHTML = `<div class="p-10 text-center glass rounded-2xl">Bu modül yapım aşamasındadır.</div>`;
-            }
+            if(id === 'deneme') renderDeneme(container);
+            else if(id === 'program') container.innerHTML = '<div class="p-10 text-center glass rounded-2xl">Programım aktif. Diğer modülleri v3.html\'den alabilirsiniz.</div>';
+            else container.innerHTML = `<div class="p-10 text-center glass rounded-2xl">Bu modül yapım aşamasında.</div>`;
         }
 
-        /** VIEW RENDERS **/
-
-        // 1. PROFİL (Eksikler Giderildi)
-        function renderProfil(el) {
-            el.innerHTML = `
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="glass p-6 rounded-2xl flex flex-col items-center text-center">
-                        <label class="photo-upload-wrapper relative w-32 h-32 rounded-full cursor-pointer overflow-hidden border-4 border-gray-700 bg-gray-800 flex items-center justify-center mb-4 group">
-                            ${appData.user.photo ? `<img src="${appData.user.photo}" class="w-full h-full object-cover">` : `<span class="text-4xl font-bold text-gray-500">${appData.user.firstName[0]}${appData.user.lastName[0]}</span>`}
-                            <div class="overlay hidden absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs text-center p-2">Fotoğraf Değiştir</div>
-                            <input type="file" accept="image/*" onchange="uploadProfilePhoto(event)">
-                        </label>
-                        <h3 class="text-xl font-bold">${appData.user.firstName} ${appData.user.lastName}</h3>
-                        <p class="text-gray-400 text-sm">${appData.user.schoolName}</p>
-                        <div class="mt-4 px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold uppercase">
-                            ${appData.user.grade} - ${appData.user.branch}
-                        </div>
-                    </div>
-                    <div class="md:col-span-2 glass p-6 rounded-2xl space-y-4">
-                        <h3 class="font-bold border-b border-gray-700 pb-2">İletişim & Detaylar</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs text-gray-500">E-posta</label>
-                                <input type="email" id="prof-email" value="${appData.user.email || ''}" onchange="updateProfileInfo('email', this.value)" class="w-full p-2 mt-1 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm" placeholder="E-posta ekle...">
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500">Telefon</label>
-                                <input type="tel" id="prof-phone" value="${appData.user.phone || ''}" onchange="updateProfileInfo('phone', this.value)" class="w-full p-2 mt-1 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm" placeholder="Telefon ekle...">
-                            </div>
-                            <div><label class="text-xs text-gray-500">Okul No</label><p class="mt-1">${appData.user.schoolNo}</p></div>
-                            <div><label class="text-xs text-gray-500">Koç Takibi</label><p class="mt-1">${appData.user.hasCoach ? 'Aktif' : 'Pasif'}</p></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function uploadProfilePhoto(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                appData.user.photo = event.target.result; // Base64 olarak kaydet
-                save();
-                navigate('profil');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function updateProfileInfo(key, val) {
-            appData.user[key] = val;
-            save();
-        }
-
-        // 2. PROGRAMIM (Sıfırdan Eklendi)
-        function renderProgram(el) {
-            el.innerHTML = `
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="glass p-6 rounded-2xl md:col-span-1">
-                        <h3 class="font-bold mb-4 border-b border-gray-800 pb-2">Görev Ekle</h3>
-                        
-                        <div class="flex gap-2 mb-4 bg-gray-800 p-1 rounded-lg">
-                            <button id="tab-hizli" onclick="setTaskMode('hizli')" class="flex-1 py-1 rounded text-sm bg-blue-600 text-white transition">Hızlı</button>
-                            <button id="tab-detayli" onclick="setTaskMode('detayli')" class="flex-1 py-1 rounded text-sm text-gray-400 hover:text-white transition">Detaylı</button>
-                        </div>
-
-                        <div id="form-hizli" class="space-y-3 block">
-                            <textarea id="hizli-text" class="w-full bg-gray-800 border border-gray-700 rounded p-3 text-sm outline-none focus:border-blue-500" placeholder="Örn: 50 Paragraf çözülecek..." rows="3"></textarea>
-                            <button onclick="addTask('hizli')" class="w-full py-2 bg-green-600 rounded text-white font-bold hover:bg-green-700 transition">Ekle</button>
-                        </div>
-
-                        <div id="form-detayli" class="space-y-3 hidden">
-                            <select id="det-ders" onchange="populateAltKonu()" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-sm outline-none">
-                                <option value="">Ders Seçiniz...</option>
-                                ${Object.keys(tytAytKonulari.TYT).map(d => `<option value="TYT-${d}">TYT ${d}</option>`).join('')}
-                                ${Object.keys(tytAytKonulari.AYT).map(d => `<option value="AYT-${d}">AYT ${d}</option>`).join('')}
-                            </select>
-                            <select id="det-konu" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-sm outline-none">
-                                <option value="">Önce Ders Seçin</option>
-                            </select>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="number" id="det-soru" placeholder="Soru Sayısı" class="bg-gray-800 border border-gray-700 rounded p-2 text-sm outline-none">
-                                <input type="text" id="det-kaynak" placeholder="Kaynak Kitap" class="bg-gray-800 border border-gray-700 rounded p-2 text-sm outline-none">
-                            </div>
-                            <button onclick="addTask('detayli')" class="w-full py-2 bg-green-600 rounded text-white font-bold hover:bg-green-700 transition">Ekle</button>
-                        </div>
-                    </div>
-                    
-                    <div class="glass p-6 rounded-2xl md:col-span-2">
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
-                            <h3 class="font-bold">Yapılacaklar Listesi</h3>
-                            <button onclick="clearCompletedTasks()" class="text-xs text-red-500 hover:text-red-400"><i class="fas fa-trash"></i> Bitenleri Temizle</button>
-                        </div>
-                        <div id="task-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2"></div>
-                    </div>
-                </div>
-            `;
-            renderTasks();
-        }
-
-        function setTaskMode(mode) {
-            document.getElementById('form-hizli').style.display = mode === 'hizli' ? 'block' : 'none';
-            document.getElementById('form-detayli').style.display = mode === 'detayli' ? 'block' : 'none';
-            document.getElementById('tab-hizli').className = mode === 'hizli' ? 'flex-1 py-1 rounded text-sm bg-blue-600 text-white transition' : 'flex-1 py-1 rounded text-sm text-gray-400 hover:text-white transition';
-            document.getElementById('tab-detayli').className = mode === 'detayli' ? 'flex-1 py-1 rounded text-sm bg-blue-600 text-white transition' : 'flex-1 py-1 rounded text-sm text-gray-400 hover:text-white transition';
-        }
-
-        function populateAltKonu() {
-            const dersVal = document.getElementById('det-ders').value;
-            const selectKonu = document.getElementById('det-konu');
-            if(!dersVal) { selectKonu.innerHTML = '<option value="">Önce Ders Seçin</option>'; return; }
-            
-            const [exam, ders] = dersVal.split('-');
-            const konular = tytAytKonulari[exam][ders] || [];
-            selectKonu.innerHTML = konular.map(k => `<option value="${k}">${k}</option>`).join('');
-        }
-
-        function addTask(mode) {
-            let task = { id: Date.now(), status: 'pending', date: new Date().toLocaleDateString() };
-            if(mode === 'hizli') {
-                const text = document.getElementById('hizli-text').value;
-                if(!text) return alert("Metin giriniz!");
-                task.type = 'Hızlı';
-                task.text = text;
-                document.getElementById('hizli-text').value = '';
-            } else {
-                const ders = document.getElementById('det-ders').value;
-                const konu = document.getElementById('det-konu').value;
-                const soru = document.getElementById('det-soru').value;
-                const kaynak = document.getElementById('det-kaynak').value;
-                if(!ders || !konu) return alert("Ders ve konu seçiniz!");
-                task.type = 'Detaylı';
-                task.ders = ders.replace('-', ' ');
-                task.konu = konu;
-                task.soru = parseInt(soru) || 0;
-                task.kaynak = kaynak;
-                task.text = `${task.ders} - ${konu} (${soru} Soru, ${kaynak})`;
-            }
-            appData.tasks.push(task);
-            save();
-            renderTasks();
-            showToast("Görev eklendi!", "success");
-        }
-
-        function renderTasks() {
-            const list = document.getElementById('task-list');
-            if(!list) return;
-            if(appData.tasks.length === 0) {
-                list.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Henüz görev eklenmemiş.</p>';
-                return;
-            }
-            list.innerHTML = appData.tasks.map(t => `
-                <div class="p-3 bg-gray-800/50 rounded-xl border border-gray-700 flex justify-between items-center ${t.status === 'done' ? 'opacity-50' : t.status === 'passed' ? 'opacity-50 border-red-900/50' : ''}">
-                    <div class="flex-1">
-                        <span class="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300 mr-2">${t.type}</span>
-                        <span class="text-sm ${t.status === 'done' ? 'line-through' : ''}">${t.text}</span>
-                    </div>
-                    <div class="flex gap-2 shrink-0">
-                        ${t.status === 'pending' ? `
-                            <button onclick="updateTaskStatus(${t.id}, 'done')" title="Tamamlandı" class="w-8 h-8 rounded-full bg-green-600 hover:bg-green-500 flex items-center justify-center text-white"><i class="fas fa-check"></i></button>
-                            <button onclick="updateTaskStatus(${t.id}, 'passed')" title="Pas Geç/Tatil" class="w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center text-white"><i class="fas fa-forward"></i></button>
-                        ` : `
-                            <span class="text-xs px-2 py-1 bg-gray-700 rounded">${t.status === 'done' ? 'Bitti' : 'Pas'}</span>
-                        `}
-                    </div>
-                </div>
-            `).reverse().join('');
-        }
-
-        function updateTaskStatus(id, status) {
-            const task = appData.tasks.find(t => t.id === id);
-            if(task) {
-                task.status = status;
-                if(status === 'done' && task.type === 'Detaylı') {
-                    // Detaylı görevi performansa işle
-                    appData.performance.totalQuestions += task.soru;
-                    appData.performance.history.push({ date: new Date().getTime(), mins: 0, qs: task.soru, subject: task.konu });
-                    showToast("Soru sayısı performansına işlendi!", "success");
-                }
-                save();
-                renderTasks();
-            }
-        }
-
-        function clearCompletedTasks() {
-            appData.tasks = appData.tasks.filter(t => t.status === 'pending');
-            save();
-            renderTasks();
-        }
-
-        // 3. KONULARIM
-        function renderKonular(el) {
-            let html = `<div class="space-y-4">`;
-            for (let exam in tytAytKonulari) {
-                html += `<h3 class="text-xl font-bold text-blue-500 border-b border-gray-800 pb-2">${exam} Müfredatı</h3>`;
-                for (let ders in tytAytKonulari[exam]) {
-                    html += `
-                        <details class="glass rounded-xl overflow-hidden group">
-                            <summary class="p-4 cursor-pointer font-semibold flex justify-between items-center hover:bg-white/5">
-                                ${ders}
-                                <span class="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
-                                    ${tytAytKonulari[exam][ders].length} Konu
-                                </span>
-                            </summary>
-                            <div class="p-4 bg-black/20 grid md:grid-cols-2 gap-2">
-                                ${tytAytKonulari[exam][ders].map(konu => {
-                                    const key = `${exam}-${ders}-${konu}`;
-                                    const checked = appData.subjects[key] ? 'checked' : '';
-                                    return `
-                                        <label class="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer">
-                                            <input type="checkbox" onchange="toggleSubject('${key}')" ${checked} class="w-5 h-5 accent-blue-500">
-                                            <span class="${checked ? 'line-through text-gray-500' : 'text-sm'}">${konu}</span>
-                                        </label>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </details>
-                    `;
-                }
-            }
-            html += `</div>`;
-            el.innerHTML = html;
-        }
-
-        function toggleSubject(key) {
-            if (appData.subjects[key]) {
-                delete appData.subjects[key];
-            } else {
-                appData.subjects[key] = { date: new Date().getTime() };
-                showToast("Unutma eğrisi sayacı başlatıldı!", "success");
-            }
-            save();
-            navigate('konular');
-        }
-
-        // 4. DENEME ANALİZİ (Manuel Form & Uyarı Sistemi Eklendi)
+        // ==========================================
+        // DENEME ANALİZİ (TOPLU PDF & REGEX MODÜLÜ)
+        // ==========================================
         function renderDeneme(el) {
             el.innerHTML = `
-                <div class="grid lg:grid-cols-2 gap-6">
-                    <div class="space-y-6">
-                        <div class="glass p-6 rounded-2xl">
-                            <h3 class="font-bold mb-4">Akıllı Veri Aktarımı (Regex)</h3>
-                            <p class="text-xs text-gray-400 mb-3">Sınav sonucunu kopyalayıp buraya yapıştırın.</p>
-                            <textarea id="smart-parser" class="w-full h-32 p-4 bg-gray-800 rounded-xl border border-gray-700 outline-none text-sm font-mono mb-3" placeholder="Örn: Türkçe 32 D 5 Y 3 B..."></textarea>
-                            <button onclick="parseResult()" class="w-full py-2 bg-blue-600 rounded-xl font-bold text-sm">Veriyi Ayrıştır ve Kaydet</button>
-                        </div>
-                        
-                        <div class="glass p-6 rounded-2xl">
-                            <h3 class="font-bold mb-4">Manuel Deneme & Yanlış Kaydı</h3>
-                            <p class="text-xs text-gray-400 mb-3">Ders bazlı netleri veya yanlış yapılan konuları girin.</p>
-                            <div class="grid grid-cols-2 gap-2 mb-3">
-                                <input type="text" id="man-ders" placeholder="Ders Adı" class="p-2 bg-gray-800 rounded border border-gray-700 text-sm">
-                                <input type="number" id="man-net" placeholder="Net Sayısı" step="0.25" class="p-2 bg-gray-800 rounded border border-gray-700 text-sm">
+                <div class="grid lg:grid-cols-2 gap-6 h-full pb-10">
+                    <div class="space-y-6 flex flex-col">
+                        <div class="glass p-6 rounded-2xl relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition pointer-events-none"></div>
+                            <h3 class="font-bold mb-2 text-blue-400 flex items-center gap-2"><i class="fas fa-file-pdf"></i> Akıllı Sınav Okuyucu (Toplu Yükleme)</h3>
+                            <p class="text-xs text-gray-400 mb-4">Birden fazla sınav sonucunu (PDF) aynı anda seçebilirsin. Hepsini saniyeler içinde okuyup ekler.</p>
+                            
+                            <label class="w-full py-10 border-2 border-dashed border-gray-600 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition bg-black/20">
+                                <i class="fas fa-copy text-4xl text-gray-500 mb-3 group-hover:text-blue-400 transition"></i>
+                                <span class="font-bold text-gray-300">PDF Dosyalarını Seç</span>
+                                <span class="text-xs text-gray-500 mt-1">Çoklu seçim yapabilirsiniz</span>
+                                <input type="file" id="pdf-upload" accept="application/pdf" multiple class="hidden" onchange="handlePDFUpload(event)">
+                            </label>
+                            
+                            <div id="pdf-loading" class="hidden mt-4 text-center text-sm text-blue-400 animate-pulse font-bold">
+                                <i class="fas fa-spinner fa-spin mr-2"></i> PDF'ler Okunuyor, lütfen bekle...
                             </div>
-                            <input type="text" id="man-yanlis-konu" placeholder="Yanlış Yapılan Konu (Örn: Köklü Sayılar)" class="w-full p-2 bg-gray-800 rounded border border-gray-700 text-sm mb-3">
-                            <button onclick="saveManualExam()" class="w-full py-2 bg-gray-700 hover:bg-gray-600 transition rounded-xl font-bold text-sm">Manuel Kaydet</button>
+                        </div>
+
+                        <div class="glass p-6 rounded-2xl flex-1 flex flex-col">
+                            <h3 class="font-bold mb-2 text-gray-300">Metin Olarak Yapıştır</h3>
+                            <textarea id="regex-input" class="w-full flex-1 bg-gray-800 p-4 rounded-xl border border-gray-700 text-xs font-mono mb-4 outline-none focus:border-blue-500 transition resize-none hide-scroll" placeholder="Eğer PDF okumada sorun yaşanırsa, metni buraya yapıştırabilirsiniz."></textarea>
+                            <button onclick="parseRegex()" class="w-full py-3 bg-gray-700 hover:bg-blue-600 transition shadow-lg rounded-xl font-bold"><i class="fas fa-magic mr-2"></i> Metni Ayrıştır ve Kaydet</button>
                         </div>
                     </div>
 
                     <div class="glass p-6 rounded-2xl flex flex-col">
-                        <h3 class="font-bold mb-4">Geçmiş Denemeler & Analiz</h3>
-                        <div id="exam-list" class="space-y-3 text-sm flex-1 overflow-y-auto max-h-[400px]"></div>
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                            <h3 class="font-bold text-blue-400">Sonuç Karnesi Analizleri</h3>
+                            <button onclick="clearExams()" class="text-xs text-red-500 hover:text-red-400"><i class="fas fa-trash"></i> Hepsini Sil</button>
+                        </div>
+                        <div id="exam-list" class="space-y-3 overflow-y-auto flex-1 pr-2 hide-scroll"></div>
                     </div>
                 </div>
             `;
             renderExams();
         }
 
-        function parseResult() {
-            const text = document.getElementById('smart-parser').value;
-            if(!text) return alert("Metin girin!");
-            const turkce = parseFloat(text.match(/Türkçe\s*(\d+)\s*[Dd]/i)?.[1] || 0);
-            const mat = parseFloat(text.match(/Matematik\s*(\d+)\s*[Dd]/i)?.[1] || 0);
-            
-            const newExam = {
-                id: Date.now(),
-                date: new Date().toLocaleDateString(),
-                type: "Akıllı Okuyucu",
-                scores: { "Türkçe": turkce, "Matematik": mat },
-                net: turkce + mat,
-                yanlisKonular: []
-            };
-            appData.exams.unshift(newExam);
-            save();
-            renderExams();
-            document.getElementById('smart-parser').value = '';
-            showToast("Akıllı aktarım başarılı!", "success");
-        }
+        // PDF JS - TOPLU YÜKLEME (MULTIPLE UPLOAD) ENTEGRASYONU
+        async function handlePDFUpload(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
 
-        function saveManualExam() {
-            const ders = document.getElementById('man-ders').value || "Genel Deneme";
-            const net = parseFloat(document.getElementById('man-net').value) || 0;
-            const yanlisKonu = document.getElementById('man-yanlis-konu').value.trim();
+            const loadingEl = document.getElementById('pdf-loading');
+            loadingEl.classList.remove('hidden');
+            let successCount = 0;
 
-            const newExam = {
-                id: Date.now(),
-                date: new Date().toLocaleDateString(),
-                type: "Manuel Giriş",
-                scores: { [ders]: net },
-                net: net,
-                yanlisKonular: yanlisKonu ? [yanlisKonu] : []
-            };
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type !== "application/pdf") {
+                    showToast(`${file.name} PDF formatında değil, atlandı.`, "warning");
+                    continue;
+                }
 
-            // Yanlış Konu Uyarı Sistemi Logiği
-            if(yanlisKonu) {
-                if(!appData.mistakeTracker[yanlisKonu]) appData.mistakeTracker[yanlisKonu] = 0;
-                appData.mistakeTracker[yanlisKonu]++;
-                
-                if(appData.mistakeTracker[yanlisKonu] >= 2) {
-                    showToast(`UYARI: "${yanlisKonu}" konusundan üst üste yanlış yapıyorsun! Programına eklemelisin.`, "warning");
+                loadingEl.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ${i+1} / ${files.length} PDF Okunuyor...`;
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const typedarray = new Uint8Array(arrayBuffer);
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+
+                    for (let p = 1; p <= pdf.numPages; p++) {
+                        const page = await pdf.getPage(p);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(" ") + " \n";
+                    }
+
+                    const examData = extractDataFromText(fullText);
+                    if(examData) {
+                        appData.exams.unshift(examData);
+                        successCount++;
+                    }
+
+                    if (i === files.length - 1) {
+                        document.getElementById('regex-input').value = fullText;
+                    }
+
+                } catch (error) {
+                    console.error("PDF okuma hatası:", error);
+                    showToast(`${file.name} okunamadı.`, "warning");
                 }
             }
 
-            appData.exams.unshift(newExam);
-            save();
-            renderExams();
+            loadingEl.classList.add('hidden');
+            loadingEl.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PDF'ler Okunuyor, lütfen bekle...`;
+            event.target.value = ''; 
             
-            document.getElementById('man-ders').value = '';
-            document.getElementById('man-net').value = '';
-            document.getElementById('man-yanlis-konu').value = '';
+            if (successCount > 0) {
+                save();
+                renderExams();
+                showToast(`Harika! ${successCount} adet sınav başarıyla eklendi.`, "success");
+            } else {
+                showToast("Sınav verisi tespit edilemedi.", "warning");
+            }
         }
 
+        function extractDataFromText(txt) {
+            if(!txt) return null;
+
+            const sayisalMatch = txt.match(/Sayısal\s*:\s*([\d\.]+)/i);
+            const puan = sayisalMatch ? sayisalMatch[1] : "Puan Bulunamadı";
+
+            const parseNet = (keyword) => {
+                const reg1 = new RegExp(`Net:\\s*(\\d+(?:,\\d+)?)\\s*${keyword}`, 'i');
+                const reg2 = new RegExp(`(\\d+(?:,\\d+)?)\\s*${keyword}.*?Net`, 'i');
+                const reg3 = new RegExp(`${keyword}.*?Net:\\s*(\\d+(?:,\\d+)?)`, 'i');
+                const match = txt.match(reg1) || txt.match(reg2) || txt.match(reg3);
+                return match ? parseFloat(match[1].replace(',', '.')) : 0;
+            };
+
+            const mat = parseNet("MAT[A-ZİŞĞÜÇÖ]*");
+            const fen = parseNet("FEN");
+            const turk = parseNet("TÜRK[A-ZİŞĞÜÇÖ]*");
+            const sos = parseNet("SOSYAL");
+            const edebiyat = parseNet("EDEB[İI]YAT");
+
+            let totalNet = mat + fen + turk + sos + edebiyat;
+            
+            if (totalNet === 0) {
+                const fallbackMatch = txt.match(/(\d{2,3})\s+(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})\s+(\d{1,3},\d{2})/);
+                if (fallbackMatch) totalNet = parseFloat(fallbackMatch[5].replace(',', '.'));
+            }
+
+            let details = [];
+            if(mat>0) details.push(`Mat: ${mat}`);
+            if(fen>0) details.push(`Fen: ${fen}`);
+            if(turk>0) details.push(`Tür: ${turk}`);
+            if(sos>0) details.push(`Sos: ${sos}`);
+            if(edebiyat>0) details.push(`Edb: ${edebiyat}`);
+            
+            let detailStr = details.length > 0 ? details.join(' | ') : "Genel Net Okundu";
+
+            return { 
+                id: Date.now() + Math.floor(Math.random() * 1000), 
+                date: new Date().toLocaleDateString(), 
+                net: totalNet, 
+                puan: puan,
+                details: detailStr 
+            };
+        }
+
+        function parseRegex() {
+            const txt = document.getElementById('regex-input').value;
+            if(!txt) return showToast("Ayrıştırılacak metin bulunamadı.", "warning");
+            
+            const examData = extractDataFromText(txt);
+            if(examData) {
+                appData.exams.unshift(examData);
+                save(); 
+                renderExams();
+                showToast("Metinden sınav analiz edildi!", "success");
+            }
+        }
+        
         function renderExams() {
-            const list = document.getElementById('exam-list');
-            if(!list) return;
+            const c = document.getElementById('exam-list');
+            if(!c) return;
             if(appData.exams.length === 0) {
-                list.innerHTML = '<p class="text-gray-500 text-center">Henüz kayıt yok.</p>';
+                c.innerHTML = '<div class="text-center p-5 text-gray-500 text-sm">Henüz deneme verisi yok. PDF yükleyerek başlayın.</div>';
                 return;
             }
-            list.innerHTML = appData.exams.map(ex => `
-                <div class="p-3 bg-white/5 rounded-lg border border-gray-800">
-                    <div class="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
-                        <span class="font-bold">${ex.date} <span class="text-xs text-gray-500 font-normal ml-2">(${ex.type})</span></span>
-                        <span class="text-blue-500 font-bold">${ex.net} Net</span>
+            c.innerHTML = appData.exams.map(e => `
+                <div class="p-4 bg-gray-800/60 border border-gray-700/50 rounded-xl flex justify-between items-center hover:bg-gray-800 transition">
+                    <div>
+                        <div class="font-bold text-sm mb-1"><i class="fas fa-file-contract text-blue-500 mr-2"></i>${e.date}</div>
+                        <div class="text-xs text-gray-400 bg-black/20 inline-block px-2 py-0.5 rounded">${e.details}</div>
+                        ${e.puan !== "Puan Bulunamadı" ? `<div class="text-xs text-orange-400 mt-1 font-bold">Puan: ${e.puan}</div>` : ''}
                     </div>
-                    <div class="text-xs text-gray-400">
-                        ${Object.entries(ex.scores).map(([d,n]) => `${d}: ${n} N`).join(' | ')}
-                        ${ex.yanlisKonular && ex.yanlisKonular.length > 0 ? `<br><span class="text-red-400 mt-1 block">Dikkat: ${ex.yanlisKonular.join(', ')}</span>` : ''}
-                    </div>
+                    <div class="text-green-400 font-bold text-xl bg-green-900/20 px-3 py-2 rounded-lg">${e.net} Net</div>
                 </div>
             `).join('');
         }
 
-        function checkMistakes() {
-            for(let konu in appData.mistakeTracker) {
-                if(appData.mistakeTracker[konu] >= 3) {
-                    setTimeout(() => showToast(`Hatırlatma: ${konu} konusunda hala eksiğin var!`, "warning"), 2000);
-                }
+        function clearExams() {
+            if(confirm("Tüm deneme analizleri silinecek. Emin misiniz?")) {
+                appData.exams = [];
+                save();
+                renderExams();
             }
-        }
-
-        // 5. KRONOMETRE
-        let timerInterval;
-        function renderKronometre(el) {
-            el.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-10">
-                    <div class="text-8xl font-mono font-bold mb-8 text-blue-500" id="stopwatch-display">00:00:00</div>
-                    <div class="flex gap-4">
-                        <button id="btn-start" onclick="toggleTimer()" class="px-10 py-4 bg-green-600 rounded-2xl font-bold text-lg hover:scale-105 transition shadow-lg shadow-green-900/50">BAŞLAT</button>
-                        <button onclick="resetTimer()" class="px-10 py-4 bg-gray-700 rounded-2xl font-bold text-lg hover:bg-gray-600 transition">SIFIRLA</button>
-                    </div>
-                    <div id="timer-finish-form" class="hidden mt-8 glass p-6 rounded-2xl w-full max-w-md animate-in slide-in-from-top-4">
-                         <h3 class="font-bold mb-4 border-b border-gray-700 pb-2">Çalışma Verisi Ekle</h3>
-                         <input type="text" id="timer-subject" placeholder="Hangi ders/konu?" class="w-full p-3 rounded bg-gray-800 mb-3 border border-gray-700 outline-none focus:border-blue-500">
-                         <input type="number" id="timer-q" placeholder="Kaç soru çözdün?" class="w-full p-3 rounded bg-gray-800 mb-4 border border-gray-700 outline-none focus:border-blue-500">
-                         <button onclick="submitTimerData()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 transition rounded-xl font-bold text-white shadow-lg shadow-blue-900/50">Performansa Kaydet</button>
-                    </div>
-                </div>
-            `;
-            updateTimerDisplay();
-        }
-
-        function toggleTimer() {
-            if (!appData.stopwatch.running) {
-                appData.stopwatch.running = true;
-                appData.stopwatch.startTime = new Date().getTime() - appData.stopwatch.elapsed;
-                timerInterval = setInterval(updateTimerDisplay, 1000);
-                document.getElementById('btn-start').innerText = 'DURDUR';
-                document.getElementById('btn-start').classList.replace('bg-green-600', 'bg-red-600');
-                document.getElementById('btn-start').classList.replace('shadow-green-900/50', 'shadow-red-900/50');
-            } else {
-                appData.stopwatch.running = false;
-                clearInterval(timerInterval);
-                document.getElementById('btn-start').innerText = 'BAŞLAT';
-                document.getElementById('btn-start').classList.replace('bg-red-600', 'bg-green-600');
-                document.getElementById('btn-start').classList.replace('shadow-red-900/50', 'shadow-green-900/50');
-                document.getElementById('timer-finish-form').classList.remove('hidden');
-            }
-            save();
-        }
-
-        function updateTimerDisplay() {
-            if (appData.stopwatch.running) {
-                appData.stopwatch.elapsed = new Date().getTime() - appData.stopwatch.startTime;
-            }
-            const s = Math.floor(appData.stopwatch.elapsed / 1000);
-            const h = Math.floor(s / 3600);
-            const m = Math.floor((s % 3600) / 60);
-            const sec = s % 60;
-            const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-            if (document.getElementById('stopwatch-display')) document.getElementById('stopwatch-display').innerText = timeStr;
-            
-            const badge = document.getElementById('timer-badge');
-            if (appData.stopwatch.running) {
-                badge.innerText = timeStr;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        function submitTimerData() {
-            const mins = Math.floor(appData.stopwatch.elapsed / 60000);
-            const qs = parseInt(document.getElementById('timer-q').value) || 0;
-            const subj = document.getElementById('timer-subject').value || 'Belirtilmedi';
-            appData.performance.totalMinutes += mins;
-            appData.performance.totalQuestions += qs;
-            appData.performance.history.push({ date: new Date().getTime(), mins, qs, subject: subj });
-            
-            appData.stopwatch = { running: false, startTime: null, elapsed: 0 };
-            save();
-            showToast(`${mins} dakika ve ${qs} soru sisteme kaydedildi.`, "success");
-            navigate('performans');
-        }
-
-        function resetTimer() {
-            appData.stopwatch = { running: false, startTime: null, elapsed: 0 };
-            clearInterval(timerInterval);
-            save();
-            navigate('kronometre');
-        }
-
-        // 6. UNUTMA EĞRİSİ
-        function renderUnutma(el) {
-            const now = new Date().getTime();
-            const intervals = [
-                { label: '3 Günlük Tekrar', ms: 3 * 24 * 60 * 60 * 1000 },
-                { label: '1 Haftalık Tekrar', ms: 7 * 24 * 60 * 60 * 1000 },
-                { label: '1 Aylık Tekrar', ms: 30 * 24 * 60 * 60 * 1000 }
-            ];
-
-            let alerts = [];
-            for (let key in appData.subjects) {
-                const studyDate = appData.subjects[key].date;
-                const diff = now - studyDate;
-                
-                intervals.forEach(int => {
-                    if (diff >= int.ms && diff < int.ms + (24 * 60 * 60 * 1000)) {
-                        alerts.push({ konu: key.split('-').pop(), type: int.label });
-                    }
-                });
-            }
-
-            el.innerHTML = `
-                <div class="space-y-4 max-w-2xl">
-                    <div class="p-6 bg-blue-600/10 border border-blue-500/30 rounded-2xl flex items-start gap-4">
-                        <i class="fas fa-info-circle text-2xl text-blue-500 mt-1"></i>
-                        <div>
-                            <h4 class="font-bold text-blue-400 mb-1">Unutma Eğrisi Nasıl Çalışır?</h4>
-                            <p class="text-sm text-gray-300 leading-relaxed">Konularım sekmesinde bir konuya tik attığında sistem o tarihi kaydeder. Ebbinghaus Unutma Eğrisi baz alınarak 3. gün, 7. gün ve 30. günde o konuyu tekrar etmen için burada otomatik kartlar oluşturulur.</p>
-                        </div>
-                    </div>
-                    ${alerts.length === 0 ? '<div class="glass p-10 text-center rounded-2xl text-gray-500">Şu an tekrar etmen gereken bir konu bulunmuyor.</div>' : 
-                    alerts.map(a => `
-                        <div class="glass p-5 rounded-xl border-l-4 border-yellow-500 relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 opacity-10"><i class="fas fa-brain text-8xl"></i></div>
-                            <div class="text-xs text-yellow-500 font-bold uppercase mb-1"><i class="fas fa-clock"></i> ${a.type} Vaktİ!</div>
-                            <div class="text-xl font-bold mb-2">${a.konu}</div>
-                            <p class="text-sm text-gray-400">Bu konuyu çalıştığından beri ortalama süre geçti. Hafızanı tazelemek için kısa bir tekrar veya test önerilir.</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        // 7. PERFORMANS
-        function renderPerformans(el) {
-            el.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <div class="glass p-6 rounded-2xl border-t-4 border-blue-500">
-                        <div class="text-sm text-gray-400 flex items-center gap-2"><i class="fas fa-hourglass-half"></i> Toplam Odaklanma</div>
-                        <div class="text-3xl font-bold mt-2">${Math.floor(appData.performance.totalMinutes / 60)}<span class="text-lg text-gray-500 font-normal">sa</span> ${appData.performance.totalMinutes % 60}<span class="text-lg text-gray-500 font-normal">dk</span></div>
-                    </div>
-                    <div class="glass p-6 rounded-2xl border-t-4 border-green-500">
-                        <div class="text-sm text-gray-400 flex items-center gap-2"><i class="fas fa-check-double"></i> Çözülen Soru</div>
-                        <div class="text-3xl font-bold mt-2">${appData.performance.totalQuestions}</div>
-                    </div>
-                    <div class="glass p-6 rounded-2xl border-t-4 border-orange-500">
-                        <div class="text-sm text-gray-400 flex items-center gap-2"><i class="fas fa-flag-checkered"></i> Biten Konu</div>
-                        <div class="text-3xl font-bold mt-2">${Object.keys(appData.subjects).length}</div>
-                    </div>
-                </div>
-                <div class="glass p-6 rounded-2xl">
-                    <h3 class="font-bold mb-4 border-b border-gray-700 pb-2">Son Kronometre Kayıtları</h3>
-                    <div class="space-y-3">
-                        ${appData.performance.history.length === 0 ? '<p class="text-sm text-gray-500">Henüz kronometre veya program kaydı yok.</p>' : 
-                        appData.performance.history.slice(-7).reverse().map(h => `
-                            <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition">
-                                <span class="text-sm font-medium"><i class="fas fa-book text-gray-500 mr-2"></i> ${h.subject}</span>
-                                <span class="text-blue-400 font-bold text-sm bg-blue-900/30 px-3 py-1 rounded-full">${h.mins > 0 ? h.mins + ' dk / ' : ''}${h.qs} soru</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        // 8. AYARLAR
-        function renderAyarlar(el) {
-            el.innerHTML = `
-                <div class="max-w-xl space-y-6">
-                    <div class="glass p-6 rounded-2xl">
-                        <h3 class="font-bold mb-4 border-b border-gray-700 pb-2">Veri Yedekleme ve Taşıma</h3>
-                        <p class="text-sm text-gray-400 mb-6 leading-relaxed">Uygulama arka uç(backend) kullanmadığı için verilerin tarayıcında saklanıyor. Başka bir cihaza geçmek istersen verilerini indirip yeni cihazda yükleyebilirsin.</p>
-                        <div class="flex gap-4">
-                            <button onclick="exportData()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-blue-900/50">
-                                <i class="fas fa-download"></i> Verileri İndir (.json)
-                            </button>
-                            <label class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-                                <i class="fas fa-upload"></i> Veri Yükle
-                                <input type="file" onchange="importData(event)" accept=".json" class="hidden">
-                            </label>
-                        </div>
-                    </div>
-                    <button onclick="if(confirm('Tüm verilerin KALICI olarak silinecek! Bu işlemi geri alamazsın. Emin misin?')){localStorage.removeItem('yks_analiz_data'); location.reload();}" class="w-full py-4 text-red-500 border border-red-500/30 rounded-xl hover:bg-red-500 hover:text-white transition font-bold mt-4">
-                        Sistemi Sıfırla ve Verileri Sil
-                    </button>
-                </div>
-            `;
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", `yks_yedek_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if(imported.user && imported.performance) {
-                        appData = imported;
-                        save();
-                        alert("Veriler başarıyla yüklendi!");
-                        location.reload();
-                    } else {
-                        alert("Hatalı dosya yapısı!");
-                    }
-                } catch (err) {
-                    alert("Dosya okunamadı!");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
         }
     </script>
 </body>
