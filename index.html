@@ -16,11 +16,7 @@
         tailwind.config = {
             darkMode: 'class',
             theme: {
-                extend: {
-                    colors: {
-                        brand: { light: '#3b82f6', dark: '#1d4ed8', bg: '#0f172a' }
-                    }
-                }
+                extend: { colors: { brand: { light: '#3b82f6', dark: '#1d4ed8', bg: '#0f172a' } } }
             }
         }
     </script>
@@ -130,6 +126,11 @@
     </div>
 
     <script>
+        // --- TARİH FORMATLAMA (GG.AA.YYYY) ---
+        function formatDateNumeric(d) {
+            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+        }
+
         // --- VERİTABANI ---
         const tytAytKonulari = {
             "TYT": {
@@ -155,12 +156,32 @@
             subjects: {},
             performance: { totalMinutes: 0, totalQuestions: 0, history: [] },
             exams: [],
-            stopwatch: { running: false, startTime: null, elapsed: 0 }
+            stopwatch: { running: false, startTime: null, elapsed: 0, lastLapElapsed: 0 },
+            activeLaps: []
         };
+
+        let currentWeekOffset = 0; 
+        let currentTaskDate = '';
+        let currentTaskDayName = '';
 
         window.onload = () => {
             const saved = localStorage.getItem('yks_analiz_data');
-            if (saved) { appData = {...appData, ...JSON.parse(saved)}; initApp(); }
+            if (saved) { 
+                const parsed = JSON.parse(saved);
+                appData = {...appData, ...parsed}; 
+                if(!appData.activeLaps) appData.activeLaps = [];
+                if(appData.stopwatch && typeof appData.stopwatch.lastLapElapsed === 'undefined') appData.stopwatch.lastLapElapsed = 0;
+                
+                // Eski görevleri güncel tarih formatına taşı
+                const currWeek = getWeekDates(0);
+                appData.tasks.forEach(t => {
+                    if(!t.date && t.day) {
+                        const match = currWeek.find(w => w.dayName === t.day);
+                        t.date = match ? match.dateStr : formatDateNumeric(new Date());
+                    }
+                });
+                initApp(); 
+            }
             
             const dersSelect = document.getElementById('modal-ders');
             let ops = '<option value="">Ders Seç...</option>';
@@ -302,62 +323,73 @@
         }
 
         // ==========================================
-        // 2. KANBAN (PROGRAM) MODÜLÜ (Dinamik Tarihli)
+        // 2. KANBAN (PROGRAM) MODÜLÜ (ARŞİVLİ & TARİHLİ)
         // ==========================================
-        let currentTaskDay = '';
-
-        function getWeekDates() {
-            const daysArr = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-            const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-            let curr = new Date();
-            let week = [];
-            // Haftanın ilk günü Pazartesi
-            let first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1);
+        function getWeekDates(offset = 0) {
+            const curr = new Date();
+            const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1) + (offset * 7);
             let monday = new Date(curr.setDate(first));
 
+            const daysArr = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+            let week = [];
             for (let i = 0; i < 7; i++) {
                 let next = new Date(monday);
                 next.setDate(monday.getDate() + i);
-                week.push({
-                    dayName: daysArr[next.getDay()],
-                    dateStr: `${next.getDate()} ${months[next.getMonth()]}`
-                });
+                week.push({ dayName: daysArr[next.getDay()], dateStr: formatDateNumeric(next) });
             }
             return week;
         }
 
+        function changeWeek(delta) {
+            currentWeekOffset += delta;
+            renderProgram(document.getElementById('view-container'));
+        }
+
         function renderProgram(el) {
-            const weekDates = getWeekDates();
+            const weekDates = getWeekDates(currentWeekOffset);
+            const startDate = weekDates[0].dateStr;
+            const endDate = weekDates[6].dateStr;
             
-            let boardHtml = `<div class="flex gap-4 overflow-x-auto h-full snap-x pb-4 hide-scroll items-start">`;
+            let html = `
+                <div class="flex justify-between items-center mb-4 glass p-3 rounded-xl sticky top-0 z-10 bg-brand-bg/90 backdrop-blur">
+                    <button onclick="changeWeek(-1)" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition text-sm"><i class="fas fa-chevron-left mr-1"></i> Önceki Hafta</button>
+                    <div class="text-center">
+                        <h3 class="font-bold text-lg text-blue-400">${currentWeekOffset === 0 ? 'Bu Hafta' : (currentWeekOffset < 0 ? 'Geçmiş Program' : 'Gelecek Program')}</h3>
+                        <p class="text-xs text-gray-400 font-mono">${startDate} - ${endDate}</p>
+                    </div>
+                    <button onclick="changeWeek(1)" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition text-sm">Sonraki Hafta <i class="fas fa-chevron-right ml-1"></i></button>
+                </div>
+                <div class="flex gap-4 overflow-x-auto h-[calc(100%-80px)] snap-x pb-4 hide-scroll items-start">
+            `;
             
             weekDates.forEach(dayObj => {
                 const day = dayObj.dayName;
                 const date = dayObj.dateStr;
                 
-                boardHtml += `
-                    <div class="min-w-[280px] w-[280px] shrink-0 snap-center glass rounded-2xl p-4 flex flex-col h-full max-h-[calc(100vh-140px)]">
+                html += `
+                    <div class="min-w-[280px] w-[280px] shrink-0 snap-center glass rounded-2xl p-4 flex flex-col h-full max-h-[calc(100vh-220px)]">
                         <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
-                            <h3 class="font-bold text-blue-400">
-                                <i class="fas fa-calendar-day mr-1"></i> ${day} 
-                                <span class="text-xs text-gray-500 font-normal ml-1">(${date})</span>
+                            <h3 class="font-bold text-blue-400 flex flex-col">
+                                <span><i class="fas fa-calendar-day mr-1"></i> ${day}</span>
+                                <span class="text-xs text-gray-400 font-mono mt-1">${date}</span>
                             </h3>
-                            <span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full" id="count-${day}">0</span>
+                            <span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full" id="count-${date}">0</span>
                         </div>
-                        <div id="tasks-${day}" class="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[100px] hide-scroll"></div>
-                        <button onclick="openTaskModal('${day}')" class="mt-3 w-full py-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl font-bold transition border border-dashed border-blue-500/50 flex items-center justify-center gap-2 group">
+                        <div id="tasks-${date}" class="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[100px] hide-scroll"></div>
+                        <button onclick="openTaskModal('${date}', '${day}')" class="mt-3 w-full py-3 bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl font-bold transition border border-dashed border-blue-500/50 flex items-center justify-center gap-2 group">
                             <i class="fas fa-plus group-hover:scale-125 transition"></i> Ekle
                         </button>
                     </div>
                 `;
             });
-            el.innerHTML = boardHtml + `</div>`;
+            el.innerHTML = html + `</div>`;
             renderTasks();
         }
 
-        function openTaskModal(day) {
-            currentTaskDay = day;
-            document.getElementById('task-modal-title').innerHTML = `<i class="fas fa-calendar-plus mr-2"></i> ${day}`;
+        function openTaskModal(dateStr, dayName) {
+            currentTaskDate = dateStr;
+            currentTaskDayName = dayName;
+            document.getElementById('task-modal-title').innerHTML = `<i class="fas fa-calendar-plus mr-2"></i> ${dayName} <span class="text-sm font-normal text-gray-400">(${dateStr})</span>`;
             document.getElementById('task-modal').classList.remove('hidden');
             document.getElementById('modal-ders').value = '';
             document.getElementById('modal-konu').innerHTML = '<option value="">Önce Ders Seçin</option>';
@@ -381,25 +413,27 @@
             
             if(!d || !k) return showToast("Ders ve konu seçmelisin!", "warning");
             
-            appData.tasks.push({ id: Date.now(), day: currentTaskDay, ders: d.replace('-', ' '), konu: k, q: parseInt(q)||0, status: 'pending' });
+            appData.tasks.push({ id: Date.now(), date: currentTaskDate, day: currentTaskDayName, ders: d.replace('-', ' '), konu: k, q: parseInt(q)||0, status: 'pending' });
             save(); closeTaskModal(); renderTasks(); showToast("Görev eklendi!", "success");
         }
 
         function renderTasks() {
-            const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-            let counts = { 'Pazartesi':0, 'Salı':0, 'Çarşamba':0, 'Perşembe':0, 'Cuma':0, 'Cumartesi':0, 'Pazar':0 };
+            const weekDates = getWeekDates(currentWeekOffset);
+            let counts = {};
             
-            days.forEach(day => {
-                const container = document.getElementById(`tasks-${day}`);
+            weekDates.forEach(dayObj => {
+                const date = dayObj.dateStr;
+                counts[date] = 0;
+                const container = document.getElementById(`tasks-${date}`);
                 if(container) container.innerHTML = '';
             });
 
             appData.tasks.forEach(t => {
-                const targetDay = t.day || 'Pazartesi';
-                const container = document.getElementById(`tasks-${targetDay}`);
-                if(!container) return; 
+                if(!t.date) return;
+                const container = document.getElementById(`tasks-${t.date}`);
+                if(!container) return; // Bu haftada değilse çizme
                 
-                counts[targetDay]++;
+                counts[t.date]++;
                 const isDone = t.status === 'done';
                 const cardHtml = `
                     <div class="p-3 bg-gray-800/80 rounded-xl border border-gray-700 ${isDone ? 'opacity-50 grayscale' : 'hover:border-blue-500/50'} transition group relative overflow-hidden shadow-sm">
@@ -418,9 +452,10 @@
                 container.innerHTML = cardHtml + container.innerHTML; 
             });
 
-            days.forEach(day => {
-                const cBadge = document.getElementById(`count-${day}`);
-                if(cBadge) cBadge.innerText = counts[day];
+            weekDates.forEach(dayObj => {
+                const date = dayObj.dateStr;
+                const cBadge = document.getElementById(`count-${date}`);
+                if(cBadge) cBadge.innerText = counts[date];
             });
         }
 
@@ -430,7 +465,7 @@
                 t.status = 'done';
                 appData.performance.totalQuestions += t.q;
                 appData.performance.history.push({ date: Date.now(), qs: t.q, subject: t.konu, mins: 0 });
-                save(); renderTasks(); showToast(`${t.q} soru performansına eklendi!`, "success");
+                save(); renderTasks(); showToast(`${t.q} soru performansa işlendi!`, "success");
             }
         }
         function delTask(id) { appData.tasks = appData.tasks.filter(x=>x.id!==id); save(); renderTasks(); }
@@ -474,26 +509,29 @@
         }
 
         // ==========================================
-        // 4. KRONOMETRE MODÜLÜ
+        // 4. KRONOMETRE & TUR SİSTEMİ MODÜLÜ
         // ==========================================
         let swInt;
         function renderKronometre(el) {
             el.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-10 h-full pb-20">
-                    <div id="sw-display" class="text-7xl md:text-9xl font-mono font-bold mb-10 text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">00:00:00</div>
-                    <div class="flex gap-4">
-                        <button id="sw-btn" onclick="toggleSW()" class="px-10 py-4 bg-green-600 rounded-2xl font-bold text-xl shadow-lg shadow-green-900/50 hover:scale-105 transition active:scale-95">BAŞLAT</button>
-                        <button onclick="resetSW()" class="px-10 py-4 bg-gray-800 rounded-2xl font-bold text-xl border border-gray-700 hover:bg-gray-700 transition active:scale-95">SIFIRLA</button>
+                <div class="grid lg:grid-cols-3 gap-6 h-full pb-10">
+                    <div class="lg:col-span-2 flex flex-col items-center justify-center py-10 glass rounded-2xl h-fit">
+                        <div id="sw-display" class="text-7xl md:text-9xl font-mono font-bold mb-10 text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">00:00:00</div>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <button id="sw-start-btn" onclick="toggleSW()" class="px-8 py-4 bg-green-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95">BAŞLAT</button>
+                            <button id="sw-lap-btn" onclick="lapSW()" class="px-8 py-4 bg-yellow-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95 disabled:opacity-50">TUR</button>
+                            <button onclick="resetSW()" class="px-8 py-4 bg-gray-800 rounded-2xl font-bold text-lg border border-gray-700 hover:bg-gray-700 transition active:scale-95">SIFIRLA</button>
+                        </div>
                     </div>
-                    <div id="sw-form" class="hidden mt-10 glass p-6 rounded-2xl w-full max-w-sm animate-in slide-in-from-bottom-4 shadow-2xl">
-                        <h4 class="font-bold text-center mb-4 text-gray-300">Süreyi Kaydet</h4>
-                        <input type="text" id="sw-konu" placeholder="Hangi ders/konuya çalıştın?" class="w-full bg-gray-800 p-3 rounded-xl border border-gray-700 mb-3 outline-none focus:border-blue-500 transition">
-                        <input type="number" id="sw-q" placeholder="Çözülen Soru Sayısı" class="w-full bg-gray-800 p-3 rounded-xl border border-gray-700 mb-4 outline-none focus:border-blue-500 transition">
-                        <button onclick="saveSW()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold shadow-lg shadow-blue-900/50 transition">Performansa Ekle</button>
+                    
+                    <div class="glass p-6 rounded-2xl flex flex-col max-h-[500px]">
+                        <h3 class="font-bold text-blue-400 border-b border-gray-700 pb-2 mb-4"><i class="fas fa-flag-checkered mr-2"></i>Tur Kayıtları</h3>
+                        <div id="laps-list" class="flex-1 overflow-y-auto space-y-3 pr-2 hide-scroll"></div>
                     </div>
                 </div>
             `;
             updateSW();
+            renderLaps();
         }
 
         function toggleSW() {
@@ -501,14 +539,13 @@
                 appData.stopwatch.running = true;
                 appData.stopwatch.startTime = Date.now() - appData.stopwatch.elapsed;
                 swInt = setInterval(updateSW, 1000);
-                document.getElementById('sw-btn').innerText = 'DURDUR';
-                document.getElementById('sw-btn').className = 'px-10 py-4 bg-red-600 rounded-2xl font-bold text-xl shadow-lg shadow-red-900/50 hover:scale-105 transition active:scale-95';
+                document.getElementById('sw-start-btn').innerText = 'DURDUR';
+                document.getElementById('sw-start-btn').className = 'px-8 py-4 bg-red-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95';
             } else {
                 appData.stopwatch.running = false;
                 clearInterval(swInt);
-                document.getElementById('sw-btn').innerText = 'DEVAM ET';
-                document.getElementById('sw-btn').className = 'px-10 py-4 bg-green-600 rounded-2xl font-bold text-xl shadow-lg shadow-green-900/50 hover:scale-105 transition active:scale-95';
-                document.getElementById('sw-form').classList.remove('hidden');
+                document.getElementById('sw-start-btn').innerText = 'DEVAM ET';
+                document.getElementById('sw-start-btn').className = 'px-8 py-4 bg-green-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95';
             }
             save();
         }
@@ -523,18 +560,66 @@
             if(appData.stopwatch.running) { b.innerText = str; b.classList.remove('hidden'); } else b.classList.add('hidden');
         }
 
-        function saveSW() {
-            const mins = Math.floor(appData.stopwatch.elapsed/60000);
-            const qs = parseInt(document.getElementById('sw-q').value)||0;
-            const subj = document.getElementById('sw-konu').value||'Genel Çalışma';
-            appData.performance.totalMinutes += mins;
-            appData.performance.totalQuestions += qs;
-            appData.performance.history.push({ date: Date.now(), mins, qs, subject: subj });
+        function lapSW() {
+            if(!appData.stopwatch.running && appData.stopwatch.elapsed === 0) return;
             
-            appData.stopwatch={running:false,startTime:null,elapsed:0}; 
-            clearInterval(swInt); save(); showToast("Çalışman kaydedildi!", "success"); navigate('performans');
+            const currentElapsed = appData.stopwatch.running ? (Date.now() - appData.stopwatch.startTime) : appData.stopwatch.elapsed;
+            const lapElapsed = currentElapsed - (appData.stopwatch.lastLapElapsed || 0);
+            appData.stopwatch.lastLapElapsed = currentElapsed;
+            
+            const s = Math.floor(lapElapsed/1000);
+            const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+            const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+            
+            appData.activeLaps.unshift({ id: Date.now(), timeStr, mins: Math.floor(lapElapsed/60000) });
+            save(); renderLaps();
         }
-        function resetSW() { appData.stopwatch={running:false,startTime:null,elapsed:0}; clearInterval(swInt); save(); navigate('kronometre'); }
+
+        function renderLaps() {
+            const c = document.getElementById('laps-list');
+            if(!c) return;
+            if(!appData.activeLaps || appData.activeLaps.length === 0) {
+                c.innerHTML = '<div class="text-gray-500 text-sm text-center mt-10"><i class="fas fa-stopwatch text-3xl mb-2 opacity-30"></i><br>Tur kaydı yok. Çalışırken "TUR" butonuna basın.</div>';
+                return;
+            }
+            c.innerHTML = appData.activeLaps.map((lap, i) => `
+                <div class="p-3 bg-gray-800/80 rounded-xl border border-gray-700 animate-in slide-in-from-left-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-bold text-blue-400 text-sm">Tur ${appData.activeLaps.length - i}</span>
+                        <span class="font-mono text-sm bg-black/40 px-2 py-1 rounded">${lap.timeStr}</span>
+                    </div>
+                    <input type="text" id="lap-subj-${lap.id}" placeholder="Ders veya Konu" class="w-full bg-black/40 p-2 rounded-lg text-sm border border-gray-700 mb-2 outline-none focus:border-blue-500">
+                    <div class="flex gap-2">
+                        <input type="number" id="lap-q-${lap.id}" placeholder="Soru Sayısı" class="w-full bg-black/40 p-2 rounded-lg text-sm border border-gray-700 outline-none focus:border-blue-500">
+                        <button onclick="saveLap(${lap.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Kaydet</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveLap(id) {
+            const lapIndex = appData.activeLaps.findIndex(l => l.id === id);
+            if(lapIndex === -1) return;
+            const lap = appData.activeLaps[lapIndex];
+            
+            const subj = document.getElementById(`lap-subj-${id}`).value || 'Genel Çalışma';
+            const qs = parseInt(document.getElementById(`lap-q-${id}`).value) || 0;
+            
+            appData.performance.totalMinutes += lap.mins;
+            appData.performance.totalQuestions += qs;
+            appData.performance.history.push({ date: Date.now(), mins: lap.mins, qs, subject: subj });
+            
+            appData.activeLaps.splice(lapIndex, 1);
+            save(); renderLaps();
+            showToast("Tur performansa kaydedildi!", "success");
+        }
+
+        function resetSW() { 
+            appData.stopwatch = { running: false, startTime: null, elapsed: 0, lastLapElapsed: 0 }; 
+            clearInterval(swInt); save(); updateSW(); 
+            document.getElementById('sw-start-btn').innerText = 'BAŞLAT';
+            document.getElementById('sw-start-btn').className = 'px-8 py-4 bg-green-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition active:scale-95';
+        }
 
         // ==========================================
         // 5. DENEME ANALİZİ & TOPLU PDF & GELİŞMİŞ REGEX
@@ -545,7 +630,7 @@
                     <div class="space-y-6 flex flex-col">
                         <div class="glass p-6 rounded-2xl relative overflow-hidden group">
                             <div class="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition pointer-events-none"></div>
-                            <h3 class="font-bold mb-2 text-blue-400 flex items-center gap-2"><i class="fas fa-file-pdf"></i> Akıllı Sınav Okuyucu (Toplu Yükleme)</h3>
+                            <h3 class="font-bold mb-2 text-blue-400 flex items-center gap-2"><i class="fas fa-file-pdf"></i> Akıllı Sınav Okuyucu</h3>
                             <p class="text-xs text-gray-400 mb-4">Birden fazla sınav sonucunu (PDF) seçebilirsin. Gelişmiş okuyucu netleri ve puanı bulur.</p>
                             
                             <label class="w-full py-10 border-2 border-dashed border-gray-600 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition bg-black/20">
@@ -562,7 +647,7 @@
 
                         <div class="glass p-6 rounded-2xl flex-1 flex flex-col">
                             <h3 class="font-bold mb-2 text-gray-300">Metin Olarak Yapıştır</h3>
-                            <textarea id="regex-input" class="w-full flex-1 bg-gray-800 p-4 rounded-xl border border-gray-700 text-xs font-mono mb-4 outline-none focus:border-blue-500 transition resize-none hide-scroll" placeholder="PDF okumada sorun yaşanırsa, metni buraya yapıştırabilirsiniz."></textarea>
+                            <textarea id="regex-input" class="w-full flex-1 bg-gray-800 p-4 rounded-xl border border-gray-700 text-xs font-mono mb-4 outline-none focus:border-blue-500 transition resize-none hide-scroll" placeholder="PDF okumada sorun yaşanırsa, kopyaladığınız metni buraya yapıştırabilirsiniz."></textarea>
                             <button onclick="parseRegex()" class="w-full py-3 bg-gray-700 hover:bg-blue-600 transition shadow-lg rounded-xl font-bold"><i class="fas fa-magic mr-2"></i> Metni Ayrıştır ve Kaydet</button>
                         </div>
                     </div>
@@ -619,23 +704,19 @@
             else { showToast("Sınav verisi tespit edilemedi. Lütfen manuel girin.", "error"); }
         }
 
-        // GELİŞMİŞ REGEX (Daha Aggresif YKS Okuyucu)
+        // GELİŞMİŞ REGEX
         function extractDataFromText(txt) {
             if(!txt) return null;
             
-            // Puanı Bul (TYT, Sayısal, EA, Sözel vs.)
             const puanMatch = txt.match(/(?:Sayısal|TYT|EŞİT AĞIRLIK|SÖZEL|EA|Sözcük)\s*[:=]?\s*([\d\.,]+)/i) || txt.match(/YKS\s*Puan[ıi]\s*[:=]?\s*([\d\.,]+)/i);
             const puan = puanMatch ? puanMatch[1] : "Puan Okunamadı";
 
-            // Ders bazlı Netleri bulmak için kapsamlı fonksiyon
             const findNet = (keywords) => {
                 for (let kw of keywords) {
-                    // Yöntem 1: Türkçe 40 (Soru) 35 (Doğru) 5 (Yanlış) 0 (Boş) 33,75 (Net)
                     let reg1 = new RegExp(`${kw}.*?\\s+(\\d{1,2})\\s+(\\d{1,2})\\s+(\\d{1,2})\\s+(\\d{1,2}(?:,\\d{1,2})?)`, 'i');
                     let m1 = txt.match(reg1);
                     if(m1) return parseFloat(m1[4].replace(',', '.'));
 
-                    // Yöntem 2: Net: 12,50 MATEMATİK veya MATEMATİK ... Net: 12.50
                     let reg2 = new RegExp(`Net\\s*[:=]?\\s*(\\d+(?:,\\d+)?)\\s*.*?${kw}`, 'i');
                     let m2 = txt.match(reg2);
                     if(m2) return parseFloat(m2[1].replace(',', '.'));
@@ -647,22 +728,17 @@
                 return 0;
             };
 
-            const mat = findNet(['MATEMATİK', 'MAT']);
-            const fen = findNet(['FEN', 'FİZİK', 'KİMYA', 'BİYOLOJİ']);
-            const turk = findNet(['TÜRKÇE', 'TÜRK']);
-            const sos = findNet(['SOSYAL', 'TARİH', 'COĞRAFYA', 'FELSEFE', 'DİN']);
+            const mat = findNet(['MATEMATİK', 'MAT']); const fen = findNet(['FEN', 'FİZİK', 'KİMYA', 'BİYOLOJİ']);
+            const turk = findNet(['TÜRKÇE', 'TÜRK']); const sos = findNet(['SOSYAL', 'TARİH', 'COĞRAFYA', 'FELSEFE', 'DİN']);
             const edebiyat = findNet(['EDEBİYAT']);
 
             let totalNet = mat + fen + turk + sos + edebiyat;
             
-            // Eğer ders netleri sıfırsa (okunamadıysa), ana tablodan toplam neti çek
             if (totalNet === 0) {
-                // Örn: 166 (Soru) 32 (D) 28 (Y) 106 (B) 25,00 (Net) VEYA 120 (Soru) ...
                 const fallbackMatch = txt.match(/(?:120|160|166|80)\s+\d{1,3}\s+\d{1,3}\s+\d{1,3}\s+(\d{1,3}(?:,\d{1,2})?)/);
                 if (fallbackMatch) totalNet = parseFloat(fallbackMatch[1].replace(',', '.'));
             }
 
-            // Halen sıfırsa, belgedeki en büyük "Net" değerini bul
             if (totalNet === 0) {
                 const allNets = [...txt.matchAll(/Net\s*[:=]?\s*(\d+(?:,\d+)?)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
                 if(allNets.length > 0) totalNet = Math.max(...allNets); 
@@ -675,7 +751,7 @@
 
             if (totalNet === 0 && puan === "Puan Okunamadı") return null;
 
-            return { id: Date.now() + Math.floor(Math.random()*1000), date: new Date().toLocaleDateString(), net: totalNet, puan: puan, details: detailStr };
+            return { id: Date.now() + Math.floor(Math.random()*1000), date: formatDateNumeric(new Date()), net: totalNet, puan: puan, details: detailStr };
         }
 
         function parseRegex() {
@@ -807,7 +883,7 @@
         function exportData() {
             const blob = new Blob([JSON.stringify(appData)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href=url; a.download=`yks_yedek_${new Date().toISOString().slice(0,10)}.json`; a.click();
+            const a = document.createElement('a'); a.href=url; a.download=`yks_yedek_${formatDateNumeric(new Date())}.json`; a.click();
         }
         
         function importData(e) {
