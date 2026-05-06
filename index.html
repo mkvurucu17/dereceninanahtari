@@ -21,7 +21,8 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: background 0.3s ease; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; transition: background 0.3s ease; -webkit-tap-highlight-color: transparent; }
+        /* Mobil kaydırma için body overflow hidden kaldırıldı, ana kapsayıcı flex-1 ile yönetiliyor */
         .sidebar-item.active { @apply bg-blue-600 text-white; }
         .mobile-sidebar-item.active { @apply text-blue-500 bg-blue-500/10; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
@@ -36,9 +37,10 @@
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-brand-bg text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-50 dark:bg-brand-bg text-gray-900 dark:text-gray-100 h-screen flex flex-col">
 
     <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-bg px-4 hidden">
+        <!-- Giriş/Kayıt formları aynen korundu -->
         <div class="max-w-md w-full glass p-8 rounded-2xl shadow-2xl">
             <div class="text-center mb-6">
                 <h1 class="text-3xl font-bold text-blue-500 italic">YKS Analiz Merkezi</h1>
@@ -91,9 +93,9 @@
         </div>
     </div>
 
-    <div id="main-app" class="hidden flex flex-1 h-screen overflow-hidden">
+    <div id="main-app" class="hidden flex flex-1 overflow-hidden">
         <aside class="w-64 glass border-r border-gray-800 flex flex-col shrink-0 hidden md:flex">
-            <!-- YENİ LOGO ALANI -->
+            <!-- YENİ ŞIK LOGO -->
             <div class="p-5 border-b border-gray-800 flex items-center gap-3">
                 <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/20">
                     <i class="fas fa-brain"></i>
@@ -115,23 +117,23 @@
 
         <div class="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-gray-800 grid grid-cols-5 p-1 z-40 bg-brand-bg/95 gap-1" id="mobile-nav"></div>
 
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 relative pb-24 md:pb-8 flex flex-col">
+        <!-- ANA İÇERİK (footer eklendi) -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 relative pb-24 md:pb-8">
             <header class="mb-6 flex justify-between items-center">
                 <h2 id="view-title" class="text-2xl md:text-3xl font-bold">Hoş Geldin, <span id="user-display-name">...</span></h2>
                 <div id="timer-badge" class="hidden px-4 py-2 bg-red-600/20 text-red-500 rounded-full border border-red-500 animate-pulse font-mono font-bold">00:00:00</div>
             </header>
-            <div id="view-container" class="animate-in slide-in-from-bottom-4 duration-500 flex-1"></div>
-            
+            <div id="view-container" class="animate-in slide-in-from-bottom-4 duration-500 pb-6"></div>
             <!-- FOOTER -->
-            <footer class="text-center text-xs text-gray-500 mt-8 py-4 border-t border-gray-800/50 w-full">
+            <footer class="text-center text-xs text-gray-500 py-4 border-t border-gray-800/50 mt-6">
                 © 2025 Mehmet Kerim Vurucu
             </footer>
-            
             <div id="toast-container" class="fixed top-4 right-4 z-[9999] space-y-2"></div>
         </main>
     </div>
 
     <div id="task-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <!-- Görev ekleme modalı aynen korundu -->
         <div class="w-full max-w-sm glass p-6 rounded-2xl animate-in zoom-in-95 duration-200 shadow-2xl border border-gray-700 bg-brand-bg/90">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                 <h3 class="font-bold text-lg text-blue-400" id="task-modal-title">Görev Ekle</h3>
@@ -175,99 +177,36 @@
         // GÜNCELLENMİŞ MÜFREDAT (MEB SIRALI + DETAYLI ALT KONULAR)
         const tytAytKonulari = {
             "TYT": {
-                "Türkçe": [
-                    "Sözcükte Anlam", "Cümlede Anlam", "Paragrafta Anlam", "Ses Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri",
-                    "İsimler", "Sıfatlar", "Zamirler", "Zarflar", "Edat - Bağlaç - Ünlem", "Fiiller", "Fiilimsiler",
-                    "Cümlenin Ögeleri", "Cümle Türleri", "Anlatım Bozuklukları"
-                ],
-                "Matematik": [
-                    "Temel Kavramlar", "Sayı Basamakları", "Bölme - Bölünebilme", "EBOB - EKOK", "Rasyonel Sayılar",
-                    "Basit Eşitsizlikler", "Mutlak Değer", "Üslü Sayılar", "Köklü Sayılar", "Çarpanlara Ayırma",
-                    "Oran - Orantı", "Denklem Çözme", "Sayı Problemleri", "Kesir Problemleri", "Yaş Problemleri",
-                    "Yüzde - Kâr - Zarar", "Karışım Problemleri", "İşçi - Havuz Problemleri", "Hareket Problemleri",
-                    "Grafik Problemleri", "Kümeler", "Mantık", "Fonksiyonlar", "Permütasyon", "Kombinasyon",
-                    "Olasılık", "İstatistik ve Veri"
-                ],
-                "Geometri": [
-                    "Doğruda Açılar", "Üçgende Açılar", "Dik Üçgen", "İkizkenar Üçgen", "Eşkenar Üçgen",
-                    "Açıortay", "Kenarortay", "Üçgende Alan", "Üçgende Benzerlik", "Çokgenler", "Dörtgenler",
-                    "Yamuk", "Paralelkenar", "Eşkenar Dörtgen", "Dikdörtgen", "Kare", "Deltoid",
-                    "Çemberde Açı", "Çemberde Uzunluk", "Dairede Alan", "Analitik Geometri",
-                    "Katı Cisimler (Prizma - Piramit - Silindir - Koni - Küre)"
-                ],
-                "Fizik": [
-                    "Fizik Bilimine Giriş", "Madde ve Özellikleri", "Hareket ve Kuvvet", "İş - Güç - Enerji",
-                    "Isı ve Sıcaklık", "Elektrostatik", "Elektrik Akımı ve Devreleri", "Manyetizma",
-                    "Basınç", "Kaldırma Kuvveti", "Yay ve Su Dalgaları", "Ses ve Deprem Dalgaları",
-                    "Aydınlanma ve Gölge", "Yansıma ve Aynalar", "Kırılma ve Renk", "Mercekler"
-                ],
-                "Kimya": [
-                    "Kimya Bilimi", "Atom Modelleri ve Yapısı", "Periyodik Sistem", "Kimyasal Türler Arası Etkileşimler",
-                    "Maddenin Halleri", "Doğa ve Kimya", "Kimyanın Temel Kanunları", "Kimyasal Hesaplamalar",
-                    "Karışımlar", "Karışımları Ayırma Teknikleri", "Asitler - Bazlar ve Tuzlar", "Kimya Her Yerde"
-                ],
-                "Biyoloji": [
-                    "Canlıların Ortak Özellikleri", "İnorganik Bileşikler", "Karbonhidratlar", "Lipitler",
-                    "Proteinler ve Enzimler", "Hücre Zarı ve Madde Geçişleri", "Hücre Organelleri",
-                    "Canlıların Sınıflandırılması", "Mitoz Bölünme", "Mayoz Bölünme", "Eşeysiz ve Eşeyli Üreme",
-                    "Kalıtım", "Kan Grupları", "Soyağaçları", "Ekosistem Ekolojisi", "Güncel Çevre Sorunları"
-                ]
+                "Türkçe": ["Sözcükte Anlam","Cümlede Anlam","Paragrafta Anlam","Ses Bilgisi","Yazım Kuralları","Noktalama İşaretleri","İsimler","Sıfatlar","Zamirler","Zarflar","Edat - Bağlaç - Ünlem","Fiiller","Fiilimsiler","Cümlenin Ögeleri","Cümle Türleri","Anlatım Bozuklukları"],
+                "Matematik": ["Temel Kavramlar","Sayı Basamakları","Bölme - Bölünebilme","EBOB - EKOK","Rasyonel Sayılar","Basit Eşitsizlikler","Mutlak Değer","Üslü Sayılar","Köklü Sayılar","Çarpanlara Ayırma","Oran - Orantı","Denklem Çözme","Sayı Problemleri","Kesir Problemleri","Yaş Problemleri","Yüzde - Kâr - Zarar","Karışım Problemleri","İşçi - Havuz Problemleri","Hareket Problemleri","Grafik Problemleri","Kümeler","Mantık","Fonksiyonlar","Permütasyon","Kombinasyon","Olasılık","İstatistik ve Veri"],
+                "Geometri": ["Doğruda Açılar","Üçgende Açılar","Dik Üçgen","İkizkenar Üçgen","Eşkenar Üçgen","Açıortay","Kenarortay","Üçgende Alan","Üçgende Benzerlik","Çokgenler","Dörtgenler","Yamuk","Paralelkenar","Eşkenar Dörtgen","Dikdörtgen","Kare","Deltoid","Çemberde Açı","Çemberde Uzunluk","Dairede Alan","Analitik Geometri","Katı Cisimler (Prizma - Piramit - Silindir - Koni - Küre)"],
+                "Fizik": ["Fizik Bilimine Giriş","Madde ve Özellikleri","Hareket ve Kuvvet","İş - Güç - Enerji","Isı ve Sıcaklık","Elektrostatik","Elektrik Akımı ve Devreleri","Manyetizma","Basınç","Kaldırma Kuvveti","Yay ve Su Dalgaları","Ses ve Deprem Dalgaları","Aydınlanma ve Gölge","Yansıma ve Aynalar","Kırılma ve Renk","Mercekler"],
+                "Kimya": ["Kimya Bilimi","Atom Modelleri ve Yapısı","Periyodik Sistem","Kimyasal Türler Arası Etkileşimler","Maddenin Halleri","Doğa ve Kimya","Kimyanın Temel Kanunları","Kimyasal Hesaplamalar","Karışımlar","Karışımları Ayırma Teknikleri","Asitler - Bazlar ve Tuzlar","Kimya Her Yerde"],
+                "Biyoloji": ["Canlıların Ortak Özellikleri","İnorganik Bileşikler","Karbonhidratlar","Lipitler","Proteinler ve Enzimler","Hücre Zarı ve Madde Geçişleri","Hücre Organelleri","Canlıların Sınıflandırılması","Mitoz Bölünme","Mayoz Bölünme","Eşeysiz ve Eşeyli Üreme","Kalıtım","Kan Grupları","Soyağaçları","Ekosistem Ekolojisi","Güncel Çevre Sorunları"]
             },
             "AYT": {
-                "Matematik": [
-                    "İkinci Dereceden Denklemler", "İkinci Dereceden Eşitsizlikler", "Parabol",
-                    "Karmaşık Sayılar", "Polinomlar", "Logaritma", "Aritmetik Dizi", "Geometrik Dizi",
-                    "Trigonometri (Açı - Fonksiyonlar)", "Trigonometrik Denklemler", "Limit", "Süreklilik",
-                    "Türev Alma Kuralları", "Türevin Geometrik Yorumu", "Maksimum - Minimum Problemleri",
-                    "Belirsiz İntegral", "Belirli İntegral", "İntegralde Alan"
-                ],
-                "Fizik": [
-                    "Vektörler", "Bağıl Hareket ve Nehir Problemleri", "Newton'un Hareket Yasaları",
-                    "Bir Boyutta Sabit İvmeli Hareket", "Atışlar", "İş - Güç - Enerji", "İtme ve Çizgisel Momentum",
-                    "Tork", "Denge ve Kesişen Kuvvetler", "Kütle ve Ağırlık Merkezi", "Basit Makineler",
-                    "Elektriksel Kuvvet ve Potansiyel", "Düzgün Elektrik Alan ve Sığa", "Manyetik Alan ve Manyetik Kuvvet",
-                    "Elektromanyetik İndüklenme", "Alternatif Akım", "Transformatörler",
-                    "Düzgün Çembersel Hareket", "Dönerek Öteleme ve Açısal Momentum",
-                    "Kütle Çekim ve Kepler Yasaları", "Basit Harmonik Hareket",
-                    "Su Dalgalarında Girişim ve Kırınım", "Işığın Çift Yarıkta Girişimi ve Tek Yarıkta Kırınımı",
-                    "Elektromanyetik Dalgalar", "Atom Modelleri", "Büyük Patlama ve Evrenin Oluşumu",
-                    "Radyoaktivite", "Özel Görelilik", "Fotoelektrik Olayı", "Compton ve De Broglie",
-                    "Modern Fiziğin Teknolojideki Uygulamaları"
-                ],
-                "Kimya": [
-                    "Kuantum Atom Modeli", "Periyodik Özellikler", "Gazların Özellikleri ve Gaz Yasaları",
-                    "İdeal Gaz Denklemi ve Kinetik Teori", "Sıvı Çözeltiler ve Derişim Birimleri",
-                    "Koligatif Özellikler", "Kimyasal Tepkimelerde Isı (Entalpi)", "Kimyasal Tepkimelerde Hız",
-                    "Kimyasal Denge (Kc - Kp)", "Le Chatelier İlkesi", "Sulu Çözelti Dengeleri (Asit-Baz)",
-                    "Çözünürlük Dengesi (Kçç)", "Redoks Tepkimeleri", "Aktiflik", "Elektrokimyasal Piller",
-                    "Elektroliz", "Karbon Kimyasına Giriş", "Hibritleşme ve Molekül Geometrisi",
-                    "Alkanlar", "Alkenler", "Alkinler", "Aromatik Bileşikler", "Alkoller", "Eterler",
-                    "Aldehitler ve Ketonlar", "Karboksilik Asitler", "Esterler", "Enerji Kaynakları ve Sürdürülebilirlik"
-                ],
-                "Biyoloji": [
-                    "Sinir Sistemi Yapısı ve İşleyişi", "Endokrin Sistem ve Hormonlar", "Duyu Organları",
-                    "Destek ve Hareket Sistemi (Kemik - Kıkırdak - Kas)", "Sindirim Sistemi",
-                    "Dolaşım Sistemi (Kalp - Damarlar - Kan)", "Lenf Sistemi ve Bağışıklık", "Solunum Sistemi",
-                    "Boşaltım Sistemi (Üriner)", "Üreme Sistemi", "Embriyonik Gelişim",
-                    "Komünite Ekolojisi", "Popülasyon Ekolojisi", "Nükleik Asitlerin Yapısı (DNA - RNA)",
-                    "DNA Replikasyonu", "Protein Sentezi (Genden Proteine)", "Genetik Mühendisliği ve Biyoteknoloji",
-                    "Fotosentez", "Kemosentez", "Hücresel Solunum (Oksijenli / Oksijensiz / Fermantasyon)",
-                    "Bitkilerin Yapısı ve Bitkisel Dokular", "Bitkilerde Büyüme ve Hareket (Tropizma - Nasti)",
-                    "Bitkilerde Hormonlar", "Bitkilerde Taşıma (Odun - Soymuk Boruları)",
-                    "Bitkilerde Beslenme", "Bitkilerde Eşeyli Üreme (Çiçek ve Tohum)"
-                ]
+                "Matematik": ["İkinci Dereceden Denklemler","İkinci Dereceden Eşitsizlikler","Parabol","Karmaşık Sayılar","Polinomlar","Logaritma","Aritmetik Dizi","Geometrik Dizi","Trigonometri (Açı - Fonksiyonlar)","Trigonometrik Denklemler","Limit","Süreklilik","Türev Alma Kuralları","Türevin Geometrik Yorumu","Maksimum - Minimum Problemleri","Belirsiz İntegral","Belirli İntegral","İntegralde Alan"],
+                "Fizik": ["Vektörler","Bağıl Hareket ve Nehir Problemleri","Newton'un Hareket Yasaları","Bir Boyutta Sabit İvmeli Hareket","Atışlar","İş - Güç - Enerji","İtme ve Çizgisel Momentum","Tork","Denge ve Kesişen Kuvvetler","Kütle ve Ağırlık Merkezi","Basit Makineler","Elektriksel Kuvvet ve Potansiyel","Düzgün Elektrik Alan ve Sığa","Manyetik Alan ve Manyetik Kuvvet","Elektromanyetik İndüklenme","Alternatif Akım","Transformatörler","Düzgün Çembersel Hareket","Dönerek Öteleme ve Açısal Momentum","Kütle Çekim ve Kepler Yasaları","Basit Harmonik Hareket","Su Dalgalarında Girişim ve Kırınım","Işığın Çift Yarıkta Girişimi ve Tek Yarıkta Kırınımı","Elektromanyetik Dalgalar","Atom Modelleri","Büyük Patlama ve Evrenin Oluşumu","Radyoaktivite","Özel Görelilik","Fotoelektrik Olayı","Compton ve De Broglie","Modern Fiziğin Teknolojideki Uygulamaları"],
+                "Kimya": ["Kuantum Atom Modeli","Periyodik Özellikler","Gazların Özellikleri ve Gaz Yasaları","İdeal Gaz Denklemi ve Kinetik Teori","Sıvı Çözeltiler ve Derişim Birimleri","Koligatif Özellikler","Kimyasal Tepkimelerde Isı (Entalpi)","Kimyasal Tepkimelerde Hız","Kimyasal Denge (Kc - Kp)","Le Chatelier İlkesi","Sulu Çözelti Dengeleri (Asit-Baz)","Çözünürlük Dengesi (Kçç)","Redoks Tepkimeleri","Aktiflik","Elektrokimyasal Piller","Elektroliz","Karbon Kimyasına Giriş","Hibritleşme ve Molekül Geometrisi","Alkanlar","Alkenler","Alkinler","Aromatik Bileşikler","Alkoller","Eterler","Aldehitler ve Ketonlar","Karboksilik Asitler","Esterler","Enerji Kaynakları ve Sürdürülebilirlik"],
+                "Biyoloji": ["Sinir Sistemi Yapısı ve İşleyişi","Endokrin Sistem ve Hormonlar","Duyu Organları","Destek ve Hareket Sistemi (Kemik - Kıkırdak - Kas)","Sindirim Sistemi","Dolaşım Sistemi (Kalp - Damarlar - Kan)","Lenf Sistemi ve Bağışıklık","Solunum Sistemi","Boşaltım Sistemi (Üriner)","Üreme Sistemi","Embriyonik Gelişim","Komünite Ekolojisi","Popülasyon Ekolojisi","Nükleik Asitlerin Yapısı (DNA - RNA)","DNA Replikasyonu","Protein Sentezi (Genden Proteine)","Genetik Mühendisliği ve Biyoteknoloji","Fotosentez","Kemosentez","Hücresel Solunum (Oksijenli / Oksijensiz / Fermantasyon)","Bitkilerin Yapısı ve Bitkisel Dokular","Bitkilerde Büyüme ve Hareket (Tropizma - Nasti)","Bitkilerde Hormonlar","Bitkilerde Taşıma (Odun - Soymuk Boruları)","Bitkilerde Beslenme","Bitkilerde Eşeyli Üreme (Çiçek ve Tohum)"]
             }
         };
 
         let appData = {
             user: { firstName: '', lastName: '', schoolName: '', schoolNo: '', grade: '', branch: '', hasCoach: false, email: '', phone: '', photo: '' },
             tasks: [], subjects: {}, studyDates: {}, performance: { totalMinutes: 0, totalQuestions: 0, history: [] },
-            exams: [], stopwatch: { running: false, startTime: null, elapsed: 0, lastLapElapsed: 0 }, activeLaps: []
+            exams: [], stopwatch: { running: false, startTime: null, elapsed: 0, lastLapElapsed: 0 }, activeLaps: [],
+            chartInstances: {} // grafik örneklerini saklamak için
         };
 
         window.onload = () => {
             const saved = localStorage.getItem('yks_analiz_data');
-            if (saved) { appData = {...appData, ...JSON.parse(saved)}; if(!appData.studyDates) appData.studyDates = {}; }
+            if (saved) { 
+                const parsed = JSON.parse(saved);
+                appData = {...appData, ...parsed}; 
+                if(!appData.studyDates) appData.studyDates = {};
+                if(!appData.chartInstances) appData.chartInstances = {};
+            }
             
             let ops = '<option value="">Ders Seç...</option>';
             Object.keys(tytAytKonulari.TYT).forEach(d => ops += `<option value="TYT-${d}">TYT ${d}</option>`);
@@ -618,7 +557,7 @@
             let cleanTxt = txt.replace(/\r/g, '').replace(/Α/g, 'A').replace(/Υ/g, 'Y').replace(/Τ/g, 'T').replace(/Μ/g, 'M').replace(/Κ/g, 'K').replace(/Β/g, 'B');
             let lines = cleanTxt.split('\n');
 
-            // Gelişmiş isim yakalama: Büyük harfli satırlarda yayınevi/sınav adı ara
+            // Gelişmiş isim yakalama
             let examName = '';
             for (let line of lines) {
                 let match = line.match(/([A-Z0-9ĞÜŞİÖÇ][A-Z0-9ĞÜŞİÖÇ\s\-.,!]+(?:YAYINLARI|YAYINCILIK|DENEME|KURUMSAL|TÜRKİYE GENELİ|ÖZEL|SINAVI)[^\n]*)/);
@@ -631,22 +570,12 @@
 
             let type = cleanTxt.match(/AYT|Alan Yeterlilik/i) ? 'AYT' : 'TYT';
             
-            // Branş Bazlı Detay Objeleri
-            let b = { 
-                MAT: {d:0, y:0, t:40}, 
-                FZK: {d:0, y:0, t: type==='AYT'?14:7}, 
-                KMY: {d:0, y:0, t: type==='AYT'?13:7}, 
-                BY: {d:0, y:0, t: type==='AYT'?13:6}, 
-                TURK: {d:0, y:0, t:40}, 
-                SOS: {d:0, y:0, t:20} 
-            };
-            
+            let b = { MAT: {d:0, y:0, t:40}, FZK: {d:0, y:0, t: type==='AYT'?14:7}, KMY: {d:0, y:0, t: type==='AYT'?13:7}, BY: {d:0, y:0, t: type==='AYT'?13:6}, TURK: {d:0, y:0, t:40}, SOS: {d:0, y:0, t:20} };
             let autoTopics = [];
 
             for(let i=0; i<lines.length; i++) {
                 let line = lines[i];
                 let match = line.match(/(?:TYT|AYT)\.(MAT|FZK|KMY|BY|TRH|CGR|FLSF|DKAB|TDE|SYLJ|PSKL|MNTK)\.[\d\.]+\s+(.*)/i);
-                
                 if(match) {
                     let rawDers = match[1].toUpperCase();
                     let konuRaw = match[2].trim().replace(/['"“”]/g, '');
@@ -661,7 +590,6 @@
                     if(dersKey === 'TÜRKÇE' || dersKey === 'TÜRK') dersKey = 'TURK';
 
                     let ctx = (lines[i-1]||'') + line + (lines[i+1]||'');
-                    // İyileştirme: satırın bağlamında + varsa doğru, - veya küçük harf varsa yanlış
                     let hasPlus = ctx.includes('+');
                     let hasMinus = ctx.includes('-') || /[a-z]/.test(line.split(/(?:AYT|TYT)/)[0]||'');
                     
@@ -673,7 +601,6 @@
                         if(konuSade.endsWith(',')) konuSade = konuSade.slice(0, -1);
                         if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Yanlış" });
                     } else {
-                        // ne + ne - varsa Boş olarak ekle
                         let konuSade = konuRaw.replace(/(açıklar|kavrar|çözer|belirler|örnekler verir|analiz eder|fark eder|irdeler|sınıflandırarak|yorumlar|ile ilgili).*?/gi, '').trim();
                         if(konuSade.endsWith(',')) konuSade = konuSade.slice(0, -1);
                         if(konuSade.length > 3) autoTopics.push({ id: Date.now()+Math.random(), name: konuSade, status: "Boş" });
@@ -698,21 +625,20 @@
                 if(fb) totalNet = parseFloat(fb[1].replace(',','.'));
             }
 
-            // Gelişmiş Tablo Html Oluşturma
             let detailHtml = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center text-[11px] bg-black/40 p-3 rounded-lg mt-2 font-mono">`;
             if(b.MAT.d>0 || b.MAT.y>0) {
                 let empty = b.MAT.t - (b.MAT.d + b.MAT.y);
                 detailHtml += `<div><b class="text-blue-400 block mb-1">MATEMATİK</b><span class="text-green-400">${b.MAT.d} D</span> | <span class="text-red-400">${b.MAT.y} Y</span> | <span class="text-gray-400">${empty>0?empty:0} B</span><br><b class="text-white">${matN.toFixed(2)} N</b></div>`;
             }
             if(type === 'AYT' && alan === 'SAY') {
-                if(b.FZK.d>0||b.FZK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FİZİK</b><span class="text-green-400">${b.FZK.d} D</span> | <span class="text-red-400">${b.FZK.y} Y</span> | <span class="text-gray-400">${b.FZK.t-(b.FZK.d+b.FZK.y)>0?b.FZK.t-(b.FZK.d+b.FZK.y):0} B</span><br><b class="text-white">${fizN.toFixed(2)} N</b></div>`;
-                if(b.KMY.d>0||b.KMY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">KİMYA</b><span class="text-green-400">${b.KMY.d} D</span> | <span class="text-red-400">${b.KMY.y} Y</span> | <span class="text-gray-400">${b.KMY.t-(b.KMY.d+b.KMY.y)>0?b.KMY.t-(b.KMY.d+b.KMY.y):0} B</span><br><b class="text-white">${kimN.toFixed(2)} N</b></div>`;
-                if(b.BY.d>0||b.BY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">BİYOLOJİ</b><span class="text-green-400">${b.BY.d} D</span> | <span class="text-red-400">${b.BY.y} Y</span> | <span class="text-gray-400">${b.BY.t-(b.BY.d+b.BY.y)>0?b.BY.t-(b.BY.d+b.BY.y):0} B</span><br><b class="text-white">${biyoN.toFixed(2)} N</b></div>`;
+                if(b.FZK.d>0||b.FZK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FİZİK</b>... ${fizN.toFixed(2)} N</div>`;
+                if(b.KMY.d>0||b.KMY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">KİMYA</b>... ${kimN.toFixed(2)} N</div>`;
+                if(b.BY.d>0||b.BY.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">BİYOLOJİ</b>... ${biyoN.toFixed(2)} N</div>`;
             } else {
                 let fD = b.FZK.d+b.KMY.d+b.BY.d; let fY = b.FZK.y+b.KMY.y+b.BY.y; let fT = b.FZK.t+b.KMY.t+b.BY.t;
-                if(fD>0||fY>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FEN BİL.</b><span class="text-green-400">${fD} D</span> | <span class="text-red-400">${fY} Y</span> | <span class="text-gray-400">${fT-(fD+fY)>0?fT-(fD+fY):0} B</span><br><b class="text-white">${fenN.toFixed(2)} N</b></div>`;
-                if(b.TURK.d>0||b.TURK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">TÜRKÇE</b><span class="text-green-400">${b.TURK.d} D</span> | <span class="text-red-400">${b.TURK.y} Y</span> | <span class="text-gray-400">${b.TURK.t-(b.TURK.d+b.TURK.y)>0?b.TURK.t-(b.TURK.d+b.TURK.y):0} B</span><br><b class="text-white">${turkN.toFixed(2)} N</b></div>`;
-                if(b.SOS.d>0||b.SOS.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">SOSYAL</b><span class="text-green-400">${b.SOS.d} D</span> | <span class="text-red-400">${b.SOS.y} Y</span> | <span class="text-gray-400">${b.SOS.t-(b.SOS.d+b.SOS.y)>0?b.SOS.t-(b.SOS.d+b.SOS.y):0} B</span><br><b class="text-white">${sosN.toFixed(2)} N</b></div>`;
+                if(fD>0||fY>0) detailHtml += `<div><b class="text-blue-400 block mb-1">FEN</b>... ${fenN.toFixed(2)} N</div>`;
+                if(b.TURK.d>0||b.TURK.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">TÜRKÇE</b>... ${turkN.toFixed(2)} N</div>`;
+                if(b.SOS.d>0||b.SOS.y>0) detailHtml += `<div><b class="text-blue-400 block mb-1">SOSYAL</b>... ${sosN.toFixed(2)} N</div>`;
             }
             detailHtml += `</div>`;
 
@@ -733,77 +659,47 @@
             c.innerHTML = appData.exams.map(e => `
                 <div class="p-4 bg-gray-800/60 border border-gray-700/50 rounded-xl hover:bg-gray-800 transition">
                     <div class="flex justify-between items-center mb-1">
-                        <div class="flex flex-col">
-                            <span class="font-bold text-blue-400 text-md">${e.name}</span>
-                            <span class="text-xs text-gray-500"><span class="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded uppercase mr-1">${e.type}</span> ${e.date}</span>
-                        </div>
-                        <div class="text-green-400 font-bold text-2xl bg-green-900/20 px-4 py-1 rounded-lg">${e.net.toFixed(2)} <span class="text-sm font-normal">Net</span></div>
+                        <div class="flex flex-col"><span class="font-bold text-blue-400 text-md">${e.name}</span><span class="text-xs text-gray-500">${e.type} | ${e.date}</span></div>
+                        <div class="text-green-400 font-bold text-2xl">${e.net.toFixed(2)} N</div>
                     </div>
-                    ${e.detailsHtml || ''}
+                    ${e.detailsHtml}
                     <div class="flex justify-between items-center border-t border-gray-700/50 pt-3 mt-3">
-                        <button onclick="openExamAnalysisModal(${e.id})" class="text-xs text-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-white transition font-bold flex items-center gap-1"><i class="fas fa-microscope"></i> Eksikler (${e.topics.length})</button>
-                        <button onclick="deleteExam(${e.id})" class="w-8 h-8 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition"><i class="fas fa-trash text-sm"></i></button>
+                        <button onclick="openExamAnalysisModal(${e.id})" class="text-xs text-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg hover:bg-yellow-500 hover:text-white transition"><i class="fas fa-microscope"></i> Eksikler (${e.topics.length})</button>
+                        <button onclick="deleteExam(${e.id})" class="w-8 h-8 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center"><i class="fas fa-trash text-sm"></i></button>
                     </div>
                 </div>
             `).join('');
         }
         function deleteExam(id) { appData.exams = appData.exams.filter(e => e.id !== id); save(); renderExams(); showToast("Deneme silindi.", "success"); }
 
-        // --- TAM GENİŞLİKTE AYRI GRAFİKLER ---
-        function renderDenemeCharts() {
-            let topicCounts = {};
-            appData.exams.forEach(e => { if(e.topics) e.topics.forEach(t => { topicCounts[t.name] = (topicCounts[t.name] || 0) + 1; }); });
-            let sortedTopics = Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0, 10);
-
-            return `
-            <div class="space-y-6 pb-10">
-                <div class="glass p-6 rounded-2xl h-[350px] flex flex-col">
-                    <h3 class="font-bold text-orange-400 mb-2 text-center text-lg">AYT Sayısal Net Gelişimi</h3>
-                    <div class="flex-1 relative w-full"><canvas id="aytChart"></canvas></div>
-                </div>
-                
-                <div class="glass p-6 rounded-2xl h-[350px] flex flex-col">
-                    <h3 class="font-bold text-blue-400 mb-2 text-center text-lg">TYT Net Gelişimi</h3>
-                    <div class="flex-1 relative w-full"><canvas id="tytChart"></canvas></div>
-                </div>
-
-                <div class="glass p-6 rounded-2xl h-fit">
-                    <h3 class="font-bold text-red-400 mb-4 border-b border-gray-700 pb-2 text-lg"><i class="fas fa-exclamation-circle mr-2"></i>Sık Hata Yapılan Konular (PDF Tespitli)</h3>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        ${sortedTopics.length === 0 ? '<p class="text-gray-500 text-sm md:col-span-2 text-center">Henüz eksik konu analizi girmediniz.</p>' : 
-                          sortedTopics.map(t => `<div class="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-gray-700/50"><span class="text-sm font-medium pr-2">${t[0]}</span><span class="text-red-400 font-bold bg-red-500/10 px-3 py-1 rounded-lg whitespace-nowrap">${t[1]} Hata</span></div>`).join('')}
-                    </div>
-                </div>
-            </div>`;
+        // Grafik yardımcıları
+        function destroyCharts() {
+            if (appData.chartInstances.tyt) { appData.chartInstances.tyt.destroy(); appData.chartInstances.tyt = null; }
+            if (appData.chartInstances.ayt) { appData.chartInstances.ayt.destroy(); appData.chartInstances.ayt = null; }
         }
 
         function drawCharts() {
+            destroyCharts();
             const tytExams = appData.exams.filter(e => e.type === 'TYT').slice().reverse();
             const aytExams = appData.exams.filter(e => e.type === 'AYT').slice().reverse();
 
             const chartOptions = { 
                 responsive: true, maintainAspectRatio: false,
-                plugins: { 
-                    legend: { display: true, labels: { color: '#9ca3af', boxWidth: 12 } },
-                    tooltip: { callbacks: { label: (ctx)=> ` ${ctx.dataset.label}: ${ctx.raw.toFixed(2)} Net` } } 
-                }, 
-                scales: { 
-                    x: { ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45, font: {size: 10} }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } } 
-                } 
+                plugins: { legend: { labels: { color: '#9ca3af' } } },
+                scales: { x: { ticks: { color: '#9ca3af', maxRotation: 45, font: {size:10} } }, y: { beginAtZero: true, ticks: { color: '#9ca3af' } } }
             };
 
             if(document.getElementById('tytChart') && tytExams.length > 0) {
-                new Chart(document.getElementById('tytChart'), { 
+                appData.chartInstances.tyt = new Chart(document.getElementById('tytChart'), { 
                     type: 'line', 
                     data: { 
-                        labels: tytExams.map(e => e.name.length > 20 ? e.name.substring(0,20)+'...' : e.name), 
+                        labels: tytExams.map(e => e.name.substring(0,20)), 
                         datasets: [
-                            { label: 'TYT Toplam', data: tytExams.map(e=>e.net), borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
-                            { label: 'Matematik', data: tytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
-                            { label: 'Türkçe', data: tytExams.map(e=>e.branches?e.branches.turk:0), borderColor: '#ef4444', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
-                            { label: 'Fen', data: tytExams.map(e=>e.branches?e.branches.fen:0), borderColor: '#22c55e', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
-                            { label: 'Sosyal', data: tytExams.map(e=>e.branches?e.branches.sos:0), borderColor: '#f59e0b', borderDash: [5,5], tension: 0.3, pointRadius: 3 }
+                            { label: 'TYT Toplam', data: tytExams.map(e=>e.net), borderColor: '#8b5cf6', fill: true, tension: 0.3 },
+                            { label: 'Matematik', data: tytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3 },
+                            { label: 'Türkçe', data: tytExams.map(e=>e.branches?e.branches.turk:0), borderColor: '#ef4444', borderDash: [5,5], tension: 0.3 },
+                            { label: 'Fen', data: tytExams.map(e=>e.branches?e.branches.fen:0), borderColor: '#22c55e', borderDash: [5,5], tension: 0.3 },
+                            { label: 'Sosyal', data: tytExams.map(e=>e.branches?e.branches.sos:0), borderColor: '#f59e0b', borderDash: [5,5], tension: 0.3 }
                         ] 
                     }, 
                     options: { ...chartOptions, scales: { ...chartOptions.scales, y: { ...chartOptions.scales.y, max: 120 } } } 
@@ -811,14 +707,14 @@
             }
 
             if(document.getElementById('aytChart') && aytExams.length > 0) {
-                new Chart(document.getElementById('aytChart'), { 
+                appData.chartInstances.ayt = new Chart(document.getElementById('aytChart'), { 
                     type: 'line', 
                     data: { 
-                        labels: aytExams.map(e => e.name.length > 20 ? e.name.substring(0,20)+'...' : e.name), 
+                        labels: aytExams.map(e => e.name.substring(0,20)), 
                         datasets: [
-                            { label: 'AYT Sayısal Toplam', data: aytExams.map(e=>e.net), borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.3, pointRadius: 4 },
-                            { label: 'Matematik', data: aytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3, pointRadius: 3 },
-                            { label: 'Fen Bilimleri', data: aytExams.map(e=>e.branches?e.branches.fen:0), borderColor: '#22c55e', borderDash: [5,5], tension: 0.3, pointRadius: 3 }
+                            { label: 'AYT Sayısal', data: aytExams.map(e=>e.net), borderColor: '#f97316', fill: true, tension: 0.3 },
+                            { label: 'Matematik', data: aytExams.map(e=>e.branches?e.branches.mat:0), borderColor: '#3b82f6', borderDash: [5,5], tension: 0.3 },
+                            { label: 'Fen', data: aytExams.map(e=>e.branches?e.branches.fen:0), borderColor: '#22c55e', borderDash: [5,5], tension: 0.3 }
                         ] 
                     }, 
                     options: { ...chartOptions, scales: { ...chartOptions.scales.y, max: 80 } } 
@@ -826,6 +722,20 @@
             }
         }
 
+        function renderDenemeCharts() {
+            let topicCounts = {};
+            appData.exams.forEach(e => { if(e.topics) e.topics.forEach(t => { topicCounts[t.name] = (topicCounts[t.name] || 0) + 1; }); });
+            let sortedTopics = Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0, 10);
+
+            return `
+            <div class="space-y-6">
+                <div class="glass p-6 rounded-2xl h-[350px]"><h3 class="font-bold text-orange-400 mb-2 text-center">AYT Net Gelişimi</h3><div class="h-full"><canvas id="aytChart"></canvas></div></div>
+                <div class="glass p-6 rounded-2xl h-[350px]"><h3 class="font-bold text-blue-400 mb-2 text-center">TYT Net Gelişimi</h3><div class="h-full"><canvas id="tytChart"></canvas></div></div>
+                <div class="glass p-6 rounded-2xl"><h3 class="font-bold text-red-400 mb-4">Sık Hata Yapılan Konular</h3><div class="grid md:grid-cols-2 gap-4">${sortedTopics.length === 0 ? '<p class="text-gray-500">Henüz eksik konu analizi yok.</p>' : sortedTopics.map(t => `<div class="flex justify-between items-center bg-black/20 p-4 rounded-xl"><span class="text-sm">${t[0]}</span><span class="text-red-400 font-bold">${t[1]} Hata</span></div>`).join('')}</div></div>
+            </div>`;
+        }
+
+        let currentExamIdForAnalysis = null;
         function openExamAnalysisModal(examId) { currentExamIdForAnalysis = examId; document.getElementById('exam-analysis-modal').classList.remove('hidden'); renderEAList(); }
         function closeExamAnalysisModal() { document.getElementById('exam-analysis-modal').classList.add('hidden'); renderExams(); }
         function updateEAModalSubj() { const [ex, d] = document.getElementById('ea-ders').value.split('-'); document.getElementById('ea-konu').innerHTML = tytAytKonulari[ex][d].map(k=>`<option value="${k}">${k}</option>`).join(''); }
@@ -838,15 +748,15 @@
             const exam = appData.exams.find(e => e.id === currentExamIdForAnalysis);
             document.getElementById('ea-list').innerHTML = exam.topics.map(t => `
                 <div class="flex justify-between items-center bg-gray-800 p-3 rounded-xl border border-gray-700">
-                    <div><span class="text-xs px-2 py-0.5 rounded font-bold ${t.status==='Yanlış'?'bg-red-500/20 text-red-500':(t.status==='Boş'?'bg-yellow-500/20 text-yellow-500':'bg-gray-500/20 text-gray-400')}">${t.status}</span> <span class="text-sm ml-2 font-medium">${t.name}</span></div>
-                    <button onclick="removeExamTopic(${t.id})" class="text-gray-500 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
+                    <div><span class="text-xs px-2 py-0.5 rounded font-bold ${t.status==='Yanlış'?'bg-red-500/20 text-red-500':(t.status==='Boş'?'bg-yellow-500/20 text-yellow-500':'bg-gray-500/20 text-gray-400')}">${t.status}</span> <span class="text-sm ml-2">${t.name}</span></div>
+                    <button onclick="removeExamTopic(${t.id})" class="text-gray-500 hover:text-red-500"><i class="fas fa-trash"></i></button>
                 </div>
             `).reverse().join('');
         }
         function removeExamTopic(id) { const exam = appData.exams.find(e => e.id === currentExamIdForAnalysis); exam.topics = exam.topics.filter(t => t.id !== id); save(); renderEAList(); }
 
         // ==========================================
-        // PERFORMANS (SİLİNEBİLİR, GÜN GÜN)
+        // PERFORMANS MODÜLÜ
         // ==========================================
         function renderPerformans(el) {
             const groups = {};
@@ -862,15 +772,14 @@
 
             el.innerHTML = `
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    <div class="glass p-6 rounded-2xl border-t-4 border-blue-500 flex flex-col items-center text-center"><div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Toplam Süre</div><div class="text-3xl font-bold mt-1">${Math.floor(appData.performance.totalMinutes/60)}<span class="text-lg text-gray-500">sa</span> ${appData.performance.totalMinutes%60}<span class="text-lg text-gray-500">dk</span></div></div>
-                    <div class="glass p-6 rounded-2xl border-t-4 border-green-500 flex flex-col items-center text-center"><div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Çözülen Soru</div><div class="text-3xl font-bold mt-1">${appData.performance.totalQuestions}</div></div>
-                    <div class="glass p-6 rounded-2xl border-t-4 border-orange-500 flex flex-col items-center text-center"><div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Biten Konu</div><div class="text-3xl font-bold mt-1">${Object.keys(appData.subjects).length}</div></div>
+                    <div class="glass p-6 rounded-2xl border-t-4 border-blue-500 text-center"><div class="text-xs text-gray-400 uppercase">Toplam Süre</div><div class="text-3xl font-bold">${Math.floor(appData.performance.totalMinutes/60)}sa ${appData.performance.totalMinutes%60}dk</div></div>
+                    <div class="glass p-6 rounded-2xl border-t-4 border-green-500 text-center"><div class="text-xs text-gray-400 uppercase">Çözülen Soru</div><div class="text-3xl font-bold">${appData.performance.totalQuestions}</div></div>
+                    <div class="glass p-6 rounded-2xl border-t-4 border-orange-500 text-center"><div class="text-xs text-gray-400 uppercase">Biten Konu</div><div class="text-3xl font-bold">${Object.keys(appData.subjects).length}</div></div>
                 </div>
-                <div class="glass p-6 rounded-2xl pb-10">
+                <div class="glass p-6 rounded-2xl">
                     <h3 class="font-bold mb-4 text-blue-400">Detaylı Çalışma Geçmişi</h3>
                     <div class="space-y-6">
-                        ${sortedDates.length === 0 ? '<p class="text-gray-500 text-sm text-center">Kayıt yok.</p>' : 
-                          sortedDates.map(date => `
+                        ${sortedDates.length === 0 ? '<p class="text-gray-500 text-sm text-center">Kayıt yok.</p>' : sortedDates.map(date => `
                             <div>
                                 <div class="flex justify-between items-center mb-2 border-b border-gray-700/50 pb-1">
                                     <h4 class="font-bold text-gray-300"><i class="fas fa-calendar-day mr-2 text-gray-500"></i>${date}</h4>
@@ -879,8 +788,8 @@
                                 <div class="space-y-2">
                                     ${groups[date].items.reverse().map(i => `
                                         <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-transparent hover:border-gray-700 transition group">
-                                            <div class="flex flex-col"><span class="text-sm font-medium">${i.subject}</span><span class="text-[10px] text-gray-500">${i.mins>0?i.mins+' dk - ':''}${i.qs} Soru</span></div>
-                                            <button onclick="deletePerformance(${i.id})" class="w-8 h-8 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition opacity-100 sm:opacity-0 group-hover:opacity-100"><i class="fas fa-trash text-sm"></i></button>
+                                            <div><span class="text-sm font-medium">${i.subject}</span><span class="text-[10px] text-gray-500 ml-2">${i.mins>0?i.mins+' dk - ':''}${i.qs} Soru</span></div>
+                                            <button onclick="deletePerformance(${i.id})" class="w-8 h-8 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white opacity-100 sm:opacity-0 group-hover:opacity-100"><i class="fas fa-trash text-sm"></i></button>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -902,7 +811,7 @@
         }
 
         // ==========================================
-        // AYARLAR & UNUTMA EĞRİSİ
+        // UNUTMA EĞRİSİ & AYARLAR
         // ==========================================
         function renderUnutma(el) {
             const alerts = []; const now = Date.now();
@@ -912,10 +821,10 @@
                 else if(days >= 7 && days < 9) alerts.push({ konu: k, days: 7 });
                 else if(days >= 30 && days < 33) alerts.push({ konu: k, days: 30 });
             }
-            el.innerHTML = `<div class="space-y-4 max-w-2xl mx-auto pb-10"><div class="p-5 bg-blue-600/10 border border-blue-500/30 rounded-2xl text-sm leading-relaxed flex items-start gap-4"><i class="fas fa-info-circle text-blue-500 text-2xl mt-0.5"></i><div><span class="font-bold text-blue-400 block mb-1">Ebbinghaus Unutma Eğrisi</span>Çalıştığın konular 3., 7. ve 30. günlerinde burada tekrar kartı olarak karşına çıkar.</div></div>${alerts.length === 0 ? '<div class="text-center p-10 glass rounded-2xl text-gray-500">Bugün tekrar yok.</div>' : alerts.map(a=>`<div class="glass p-5 rounded-xl border-l-4 border-yellow-500 flex justify-between items-center"><div><div class="text-[10px] text-yellow-500 font-bold uppercase tracking-widest mb-1"><i class="fas fa-history mr-1"></i> ${a.days}. GÜN TEKRARI</div><div class="text-xl font-bold">${a.konu}</div></div><button class="w-10 h-10 rounded-full bg-gray-800 hover:bg-yellow-600 transition"><i class="fas fa-check"></i></button></div>`).join('')}</div>`;
+            el.innerHTML = `<div class="space-y-4 max-w-2xl mx-auto pb-10"><div class="p-5 bg-blue-600/10 border border-blue-500/30 rounded-2xl text-sm"><i class="fas fa-info-circle text-blue-500 mr-2"></i>Ebbinghaus Unutma Eğrisi: 3., 7. ve 30. gün tekrarları.</div>${alerts.length === 0 ? '<div class="text-center p-10 glass rounded-2xl text-gray-500">Bugün tekrar yok.</div>' : alerts.map(a=>`<div class="glass p-5 rounded-xl border-l-4 border-yellow-500 flex justify-between items-center"><div><div class="text-xs text-yellow-500 uppercase">${a.days}. GÜN TEKRARI</div><div class="text-xl font-bold">${a.konu}</div></div><button class="w-10 h-10 rounded-full bg-gray-800 hover:bg-yellow-600"><i class="fas fa-check"></i></button></div>`).join('')}</div>`;
         }
         function renderAyarlar(el) {
-            el.innerHTML = `<div class="max-w-md mx-auto space-y-6 pb-10"><button onclick="logout()" class="w-full py-3 bg-yellow-600 hover:bg-yellow-700 transition rounded-xl font-bold shadow-lg shadow-yellow-900/50 mb-4"><i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap</button><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-download-alt text-4xl text-blue-500 mb-4"></i><h3 class="font-bold mb-2">Verileri Yedekle</h3><button onclick="exportData()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 transition rounded-xl font-bold">İndir (.json)</button></div><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i><h3 class="font-bold mb-2">Veri Yükle</h3><label class="w-full py-3 bg-gray-700 hover:bg-gray-600 transition rounded-xl font-bold flex items-center justify-center cursor-pointer">Dosya Seç<input type="file" onchange="importData(event)" accept=".json" class="hidden"></label></div><button onclick="if(confirm('Emin misin?')){localStorage.removeItem('yks_analiz_data');localStorage.removeItem('yks_session');location.reload();}" class="w-full py-4 text-red-500 border border-red-500/20 rounded-xl hover:bg-red-600 hover:text-white transition font-bold"><i class="fas fa-trash-alt mr-2"></i>Tüm Sistemi Sıfırla</button></div>`;
+            el.innerHTML = `<div class="max-w-md mx-auto space-y-6 pb-10"><button onclick="logout()" class="w-full py-3 bg-yellow-600 hover:bg-yellow-700 rounded-xl font-bold"><i class="fas fa-sign-out-alt mr-2"></i> Çıkış Yap</button><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-download-alt text-4xl text-blue-500 mb-4"></i><h3 class="font-bold mb-2">Verileri Yedekle</h3><button onclick="exportData()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold">İndir (.json)</button></div><div class="glass p-6 rounded-2xl text-center"><i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i><h3 class="font-bold mb-2">Veri Yükle</h3><label class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold flex items-center justify-center cursor-pointer">Dosya Seç<input type="file" onchange="importData(event)" accept=".json" class="hidden"></label></div><button onclick="if(confirm('Emin misin?')){localStorage.removeItem('yks_analiz_data');localStorage.removeItem('yks_session');location.reload();}" class="w-full py-4 text-red-500 border border-red-500/20 rounded-xl hover:bg-red-600 hover:text-white font-bold"><i class="fas fa-trash-alt mr-2"></i>Tüm Sistemi Sıfırla</button></div>`;
         }
         function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(appData)], {type: 'application/json'})); a.download=`yks_yedek_${formatDateNumeric(new Date())}.json`; a.click(); }
         function importData(e) { const r = new FileReader(); r.onload=(ev)=>{ try { appData=JSON.parse(ev.target.result); save(); location.reload(); } catch(err) { showToast("Bozuk dosya!", "error"); } }; r.readAsText(e.target.files[0]); }
